@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Axis PDV</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../assets/styles/style.css">
+    <style>
+        body {
+            background-color: var(--background);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--foreground);
+        }
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo-container i {
+            width: 48px;
+            height: 48px;
+            color: var(--foreground);
+        }
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            margin-top: 1rem;
+        }
+        .auth-desc {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input {
+            height: 40px;
+            padding: 0 0.75rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--foreground);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--foreground);
+        }
+        .btn-auth {
+            width: 100%;
+            height: 40px;
+            background: var(--foreground);
+            color: var(--background);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 0.5rem;
+        }
+        .btn-auth:hover {
+            opacity: 0.9;
+        }
+        .switch-mode {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--muted-foreground);
+        }
+        .switch-mode button {
+            background: none;
+            border: none;
+            color: var(--foreground);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .hidden { display: none !important; }
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            z-index: 9999;
+        }
+        .toast {
+            background-color: var(--foreground);
+            color: var(--background);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-md);
+            animation: slideIn 0.3s ease forwards;
+        }
+        .toast.error { background-color: var(--destructive); color: #fff; }
+        .toast.success { background-color: #10b981; color: #fff; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="auth-container card">
+        <div class="logo-container">
+            <i data-lucide="sparkles"></i>
+            <h1 class="auth-title" id="auth-title">Acessar Conta</h1>
+            <p class="auth-desc" id="auth-desc">Faça login para continuar no PDV</p>
+        </div>
+
+        <form id="auth-form">
+            <div id="name-group" class="form-group hidden">
+                <label>Nome de Exibição</label>
+                <input type="text" id="name-input" placeholder="Seu nome">
+            </div>
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="email-input" required placeholder="seu@email.com">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="password-input" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-auth" id="btn-submit">Entrar</button>
+        </form>
+
+        <div class="switch-mode">
+            <span id="switch-text">Não tem uma conta?</span>
+            <button type="button" id="btn-switch">Criar conta</button>
+        </div>
+    </div>
+
+    <div class="auth-container card hidden" id="verify-container">
+        <div class="logo-container">
+            <i data-lucide="mail"></i>
+            <h1 class="auth-title">Verifique seu E-mail</h1>
+            <p class="auth-desc" style="margin-bottom: 1.5rem;">Um link de confirmação foi enviado para sua caixa de entrada. Clique no link recebido para validar sua conta.</p>
+        </div>
+        <button type="button" class="btn-auth" id="btn-check-verify">Já confirmei, entrar</button>
+        <button type="button" class="btn-auth" id="btn-resend-verify" style="background: transparent; color: var(--foreground); border: 1px solid var(--border); margin-top: 0.5rem;">Reenviar link</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2ZI1GpBEdn5b5wItH4E5ZBQMYpUs-o5s",
+            authDomain: "magazinepdv.firebaseapp.com",
+            projectId: "magazinepdv",
+            storageBucket: "magazinepdv.firebasestorage.app",
+            messagingSenderId: "178719555159",
+            appId: "1:178719555159:web:b7fbd4cb2a07c2313ded12"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const pdvAppId = 'pdv-pro-v1';
+
+        lucide.createIcons();
+
+        let isLogin = true;
+
+        const form = document.getElementById('auth-form');
+        const titleEl = document.getElementById('auth-title');
+        const descEl = document.getElementById('auth-desc');
+        const btnSubmit = document.getElementById('btn-submit');
+        const btnSwitch = document.getElementById('btn-switch');
+        const switchText = document.getElementById('switch-text');
+        const nameGroup = document.getElementById('name-group');
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = 'info';
+            if(type === 'success') icon = 'check-circle';
+            if(type === 'error') icon = 'alert-triangle';
+
+            toast.innerHTML = `<i data-lucide="${icon}" style="width: 18px; height: 18px;"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        btnSwitch.addEventListener('click', () => {
+            isLogin = !isLogin;
+            if (isLogin) {
+                titleEl.innerText = "Acessar Conta";
+                descEl.innerText = "Faça login para continuar no PDV";
+                btnSubmit.innerText = "Entrar";
+                switchText.innerText = "Não tem uma conta?";
+                btnSwitch.innerText = "Criar conta";
+                nameGroup.classList.add('hidden');
+                document.getElementById('name-input').required = false;
+            } else {
+                titleEl.innerText = "Criar Conta";
+                descEl.innerText = "Preencha seus dados para começar";
+                btnSubmit.innerText = "Criar Conta";
+                switchText.innerText = "Já tem uma conta?";
+                btnSwitch.innerText = "Fazer login";
+                nameGroup.classList.remove('hidden');
+                document.getElementById('name-input').required = true;
+            }
+        });
+
+        // Função auto-executável para criar o usuário base caso não exista.
+        // O Firebase vai retornar auth/email-already-in-use se já existir.
+        async function ensureMasterUser() {
+            try {
+                // Tenta criar o usuário master silenciosamente
+                await createUserWithEmailAndPassword(auth, "jumagazinestore@gmail.com", "192711");
+                // Se der certo, salva no BD
+                const user = auth.currentUser;
+                const userDoc = doc(db, 'artifacts', pdvAppId, 'public', 'data', 'usuarios', user.uid);
+                await setDoc(userDoc, { name: "Ju Magazine", email: user.email }, { merge: true });
+            } catch (error) {
+                // Se der erro (provavelmente porque já existe), ignora silenciosamente.
+            }
+        }
+        ensureMasterUser();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email-input').value.trim();
+            const pass = document.getElementById('password-input').value;
+            const name = document.getElementById('name-input').value.trim();
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Aguarde...";
+
+            try {
+                if (isLogin) {
+                    const cred = await signInWithEmailAndPassword(auth, email, pass);
+                    if (!cred.user.emailVerified && cred.user.email !== 'jumagazinestore@gmail.com') {
+                        document.querySelector('.auth-container').classList.add('hidden');
+                        document.getElementById('verify-container').classList.remove('hidden');
+                        await sendEmailVerification(cred.user);
+                        showToast("Verifique seu email para prosseguir.", "info");
+                        return;
+                    }
+                    showToast("Login realizado!", "success");
+                    setTimeout(() => window.location.replace("app.html"), 1000);
+                } else {
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    const userId = cred.user.uid;
+                    const userDoc = doc(db, 'artifacts', pdvAppId, 'users', userId, 'data', 'usuarios', userId);
+                    await setDoc(userDoc, {
+                        name: name,
+                        email: email,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    await sendEmailVerification(cred.user);
+                    document.querySelector('.auth-container').classList.add('hidden');
+                    document.getElementById('verify-container').classList.remove('hidden');
+                    showToast("Conta criada! Verifique seu e-mail.", "success");
+                }
+            } catch (err) {
+                console.error(err);
+                if(err.code === 'auth/email-already-in-use') {
+                    showToast("Email já cadastrado.", "error");
+                } else if(err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    showToast("Email ou senha inválidos.", "error");
+                } else {
+                    showToast("Erro de autenticação.", "error");
+                }
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = isLogin ? "Entrar" : "Criar Conta";
+            }
+        });
+
+        document.getElementById('btn-check-verify').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                await user.reload();
+                if (user.emailVerified) {
+                    showToast("Email verificado com sucesso!", "success");
+                    setTimeout(() => window.location.replace("app.html"), 1000);
+                } else {
+                    showToast("O email ainda não foi confirmado. Verifique também sua caixa de SPAM.", "error");
+                }
+            }
+        });
+
+        document.getElementById('btn-resend-verify').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await sendEmailVerification(user);
+                    showToast("Novo link enviado!", "success");
+                } catch(e) {
+                    showToast("Aguarde um momento antes de pedir novamente.", "error");
+                }
+            }
+        });
+    </script>
+</body>
+</html>

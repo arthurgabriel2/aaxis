@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axis - O Sistema Definitivo</title>
+    <!-- Favicon monocromático (Estrelas) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --primary: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.15);
+            --secondary: #27272a;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* HEADER */
+        header {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 3rem;
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(25, 25, 25, 0.6);
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .btn-login {
+            background: var(--text-main);
+            color: var(--bg-color);
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* HERO SECTION */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 180px;
+            text-align: center;
+            position: relative;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            line-height: 1.6;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: var(--bg-color);
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            background: #f4f4f5;
+        }
+
+        /* 3D MOCKUP */
+        .mockup-container {
+            margin-top: 5rem;
+            perspective: 1200px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 0 2rem;
+            position: relative;
+        }
+
+        .mockup-image {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+            transform: rotateX(15deg) scale(0.95);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: block;
+            transform-style: preserve-3d;
+        }
+        
+        .mockup-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 40%;
+            background: #ffffff;
+            filter: blur(100px);
+            opacity: 0.08;
+            z-index: -1;
+        }
+
+        /* FEATURES / BENTO GRID */
+        .features {
+            padding: 5rem 2rem 10rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .features-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .features-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .features-header p {
+            color: var(--text-muted);
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .bento-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-5px);
+        }
+        
+        .bento-icon {
+            background: rgba(255, 255, 255, 0.05);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .bento-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .bento-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* ABOUT SECTION */
+        .about-section {
+            position: relative;
+            padding: 8rem 2rem;
+            display: flex;
+            justify-content: center;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .about-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .about-text {
+            flex: 1;
+        }
+
+        .about-text h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        .about-image-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .large-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            font-size: 6rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -2px;
+            text-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .large-logo svg {
+            width: 80px;
+            height: 80px;
+            color: var(--text-main);
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 992px) {
+            .hero h1 { font-size: 3.5rem; }
+            .bento-grid { grid-template-columns: repeat(2, 1fr); }
+            .col-span-2 { grid-column: span 1; }
+            .about-content { flex-direction: column; text-align: center; }
+        }
+
+        @media (max-width: 768px) {
+            header { 
+                top: 1rem;
+                padding: 0.5rem;
+                gap: 1rem;
+            }
+            .logo {
+                padding-left: 0.5rem;
+            }
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2.5rem; }
+            .bento-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+
+    <header>
+        <a href="#" class="logo">
+            <i data-lucide="sparkles" style="color: var(--primary);"></i>
+            AXIS
+        </a>
+        <nav class="nav-links">
+            <a href="#features">Funcionalidades</a>
+            <a href="#about">Sobre Nós</a>
+        </nav>
+        <a href="pages/app.html" class="btn-login">Acessar Sistema</a>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="badge">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+                Axis v2.0 disponível
+            </div>
+            
+            <h1>O centro de comando do seu negócio.</h1>
+            <p>Gerencie vendas, controle seu estoque em tempo real, defina metas e obtenha insights valiosos em uma interface incrivelmente rápida e responsiva.</p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="pages/app.html" class="btn-primary">
+                    Começar Gratuitamente
+                    <i data-lucide="arrow-right"></i>
+                </a>
+                <a href="downloads/Axis Setup.exe" class="btn-primary" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); box-shadow: none;" download>
+                    <i data-lucide="download"></i>
+                    App para Windows
+                </a>
+            </div>
+
+            <div class="mockup-container" id="mockup-container">
+                <div class="mockup-glow"></div>
+                <img src="assets/img/preview.png" alt="Axis Dashboard Interface" class="mockup-image" id="tilt-image" />
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="features-header">
+                <h2>Tudo que você precisa. Nada que não precisa.</h2>
+                <p>O Axis foi construído focado em performance, design e utilidade real.</p>
+            </div>
+            
+            <div class="bento-grid">
+                <div class="bento-card col-span-2">
+                    <div class="bento-icon">
+                        <i data-lucide="zap"></i>
+                    </div>
+                    <h3>Velocidade Extrema</h3>
+                    <p>Esqueça os sistemas lentos e travados. O Axis é construído com tecnologias modernas que garantem que seu PDV nunca vai te deixar na mão, carregando informações em milissegundos.</p>
+                </div>
+                
+                <div class="bento-card">
+                    <div class="bento-icon">
+                        <i data-lucide="cloud"></i>
+                    </div>
+                    <h3>Cloud Sync</h3>
+                    <p>Seus dados estão sempre seguros e sincronizados. Acesse sua loja de qualquer dispositivo e veja suas vendas em tempo real.</p>
+                </div>
+
+                <div class="bento-card">
+                    <div class="bento-icon">
+                        <i data-lucide="bar-chart-3"></i>
+                    </div>
+                    <h3>Análise Profunda</h3>
+                    <p>Tome decisões baseadas em dados. Veja quais produtos estão vendendo mais, quem são seus melhores clientes e qual sua verdadeira margem de lucro.</p>
+                </div>
+                
+                <div class="bento-card col-span-2">
+                    <div class="bento-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <h3>Sistema Multi-usuário</h3>
+                    <p>Cada vendedor tem sua própria conta, com permissões personalizáveis, rastreamento de vendas individual e personalização total de perfil e preferências.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Sobre o Axis</h2>
+                    <p>O Axis nasceu da necessidade de modernizar a gestão do varejo. Nós redefinimos a maneira como lojistas interagem com seus dados, priorizando velocidade, design minimalista e inteligência. Nosso objetivo é democratizar a gestão de alta performance para negócios de qualquer tamanho, com foco absoluto em usabilidade.</p>
+                    <a href="pages/app.html" class="btn-primary">Acessar Sistema <i data-lucide="arrow-right"></i></a>
+                </div>
+                <div class="about-image-wrapper">
+                    <div class="large-logo">
+                        <i data-lucide="sparkles"></i>
+                        AXIS
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        
+        // Tilt Effect
+        const container = document.getElementById('mockup-container');
+        const image = document.getElementById('tilt-image');
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            // Mouse position inside the container
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            // Calculate rotation (max 15 degrees)
+            const rotateX = ((y - centerY) / centerY) * -15; 
+            const rotateY = ((x - centerX) / centerX) * 15;
+
+            image.style.transition = 'transform 0.1s ease-out';
+            image.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(0.98)`;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            // Revert back smoothly
+            image.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+            image.style.transform = `rotateX(15deg) rotateY(0) scale(0.95)`;
+        });
+
+        // Particle Effect
+        const canvas = document.getElementById('particles-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            
+            function resizeCanvas() {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+            
+            let particles = [];
+            let mouse = { x: null, y: null };
+
+            document.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            document.addEventListener('mouseleave', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 1.5;
+                }
+                draw() {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    let maxDistance = 200;
+
+                    if (distance < maxDistance && mouse.x != null) {
+                        let force = (maxDistance - distance) / maxDistance;
+                        let directionX = dx / distance;
+                        let directionY = dy / distance;
+                        this.x -= directionX * force * 5;
+                        this.y -= directionY * force * 5;
+                    }
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                resizeCanvas();
+                const numberOfParticles = (canvas.width * canvas.height) / 4000;
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function connectParticles() {
+                for (let a = 0; a < particles.length; a++) {
+                    for (let b = a; b < particles.length; b++) {
+                        let dx = particles[a].x - particles[b].x;
+                        let dy = particles[a].y - particles[b].y;
+                        let distance = dx * dx + dy * dy;
+                        if (distance < 14400) {
+                            let opacity = 1 - (distance / 14400);
+                            ctx.strokeStyle = 'rgba(255, 255, 255, ' + (opacity * 0.15) + ')';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[a].x, particles[a].y);
+                            ctx.lineTo(particles[b].x, particles[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].draw();
+                    particles[i].update();
+                }
+                connectParticles();
+                requestAnimationFrame(animateParticles);
+            }
+
+            window.addEventListener('resize', () => {
+                initParticles();
+            });
+
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
+            }, 200);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axis</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <link rel="stylesheet" href="../assets/styles/style.css?v=7">
+    <script type="module" src="../assets/scripts/app.js?v=7"></script>
+    <style>
+        body { opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        body.auth-ready { opacity: 1; pointer-events: all; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- BARRA LATERAL (ILHA FLUTUANTE NO MOBILE) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header" style="font-weight: 700; color: #fff;">
+                <i data-lucide="sparkles" style="width: 28px; height: 28px; color: #ffffff;"></i>
+                <span class="logo-text">AXIS</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" id="btn-home" onclick="window.switchTab('home')">
+                    <i data-lucide="house"></i> <span>Início</span>
+                </button>
+                <button class="nav-btn" id="btn-sales" onclick="window.switchTab('sales')">
+                    <i data-lucide="shopping-cart"></i> <span>Vendas</span>
+                </button>
+                <button class="nav-btn" id="btn-history" onclick="window.switchTab('history')">
+                    <i data-lucide="calendar"></i> <span>Histórico</span>
+                </button>
+                <button class="nav-btn" id="btn-consult" onclick="window.switchTab('consult')">
+                    <i data-lucide="book-search"></i> <span>Estoque</span>
+                </button>
+            </nav>
+            
+            <!-- CONTA CONECTADA (BOTTOM) -->
+            <div class="sidebar-account" onclick="window.toggleAccountPopover(event)">
+                <img src="https://ui-avatars.com/api/?name=User&background=random" alt="Perfil" class="account-avatar" id="account-avatar-img">
+                <div class="account-info">
+                    <span class="account-name" id="account-name-display">Usuário Logado</span>
+                    <span class="account-email" id="account-email-display">usuario@email.com</span>
+                </div>
+                <i data-lucide="chevron-up" class="account-chevron"></i>
+                
+                <!-- POPOVER -->
+                <div id="account-popover" class="account-popover" onclick="event.stopPropagation()">
+                    <button class="popover-btn" onclick="window.openProfileModal(); document.getElementById('account-popover').classList.remove('popover-active');">
+                        <i data-lucide="user"></i> Conta
+                    </button>
+                    <button class="popover-btn" onclick="window.openSettingsModal(); document.getElementById('account-popover').classList.remove('popover-active');">
+                        <i data-lucide="settings"></i> Ajustes
+                    </button>
+                    <a href="../downloads/Axis Setup.exe" class="popover-btn" download style="text-decoration: none; color: inherit;">
+                        <i data-lucide="monitor-down"></i> App para Windows
+                    </a>
+                    <button class="popover-btn" onclick="window.openNotificationsModal(); document.getElementById('account-popover').classList.remove('popover-active');">
+                        <i data-lucide="bell"></i> Notificações
+                    </button>
+                    <div class="popover-divider"></div>
+                    <button class="popover-btn text-red" onclick="window.logout()">
+                        <i data-lucide="log-out"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- WRAPPER CONTEÚDO -->
+        <main class="main-wrapper">
+            <header class="topbar">
+                <button class="btn-menu" id="toggle-sidebar-btn" onclick="window.toggleSidebar()" title="Alternar Menu">
+                    <i data-lucide="panel-left-close" id="sidebar-icon" style="width: 22px; height: 22px;"></i>
+                </button>
+                <h1 style="font-size: 1rem; font-weight: 600; margin: 0; color: var(--muted-foreground);" id="page-title">Painel de Vendas</h1>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- VIEW: INÍCIO (DASHBOARD) -->
+                <div id="view-home" class="container-view active">
+                    <div class="header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2>Dashboard de Resultados</h2>
+                            <p class="desc">Acompanhe as estatísticas, rankings e faturamento da sua loja.</p>
+                        </div>
+                        <div class="form-group" style="min-width: 200px;">
+                            <label>Selecione o Mês</label>
+                            <select id="dash-month-selector" onchange="window.renderDashboard()"></select>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-grid" style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3>Total de Vendas</h3>
+                                <i data-lucide="shopping-bag" style="color: var(--muted-foreground);"></i>
+                            </div>
+                            <div class="dash-card-value" id="dash-total-sales">0</div>
+                            <p class="dash-card-desc">Pedidos finalizados</p>
+                        </div>
+                        
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3>Faturamento</h3>
+                                <i data-lucide="dollar-sign" style="color: #10b981;"></i>
+                            </div>
+                            <div class="dash-card-value" id="dash-total-revenue">R$ 0,00</div>
+                            <p class="dash-card-desc">No mês selecionado</p>
+                        </div>
+                        
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3>Ticket Médio</h3>
+                                <i data-lucide="trending-up" style="color: #3b82f6;"></i>
+                            </div>
+                            <div class="dash-card-value" id="dash-avg-ticket">R$ 0,00</div>
+                            <p class="dash-card-desc">Média por pedido</p>
+                        </div>
+                        
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3>Forma Mais Usada</h3>
+                                <i data-lucide="credit-card" style="color: #8b5cf6;"></i>
+                            </div>
+                            <div class="dash-card-value" id="dash-top-payment" style="font-size: 1.25rem;">Nenhuma</div>
+                            <p class="dash-card-desc" id="dash-top-payment-desc">Nenhum dado</p>
+                        </div>
+                        
+                        <div class="dash-card">
+                            <div class="dash-card-header">
+                                <h3>Maior Faturamento</h3>
+                                <i data-lucide="award" style="color: #f59e0b;"></i>
+                            </div>
+                            <div class="dash-card-value" id="dash-top-revenue-payment" style="font-size: 1.25rem;">Nenhuma</div>
+                            <p class="dash-card-desc" id="dash-top-revenue-payment-desc">Nenhum dado</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid" style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+                        <div class="card" style="flex: 1; min-width: 320px; max-width: 450px;">
+                            <h3 style="margin-top:0;">Ranking de Produtos</h3>
+                            <p class="desc">Os produtos mais vendidos do mês.</p>
+                            <div class="ranking-list" id="dash-ranking-products"></div>
+                        </div>
+
+                        <div class="card" style="flex: 1; min-width: 320px; max-width: 450px;">
+                            <h3 style="margin-top:0;">Formas de Pagamento</h3>
+                            <p class="desc">Faturamento e volume por cada forma.</p>
+                            <div class="ranking-list" id="dash-ranking-payments"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODAL: CADASTRAR PRODUTO -->
+                <div id="register-modal" class="modal-overlay hidden">
+                    <div class="modal-content card" style="max-width: 700px;">
+                        <button class="modal-close" onclick="window.closeRegisterModal()"><i data-lucide="x"></i></button>
+                        <h2>Novo Produto</h2>
+                        <p class="desc" style="margin-bottom: 2rem;">Preencha os detalhes para registrar o novo item no seu estoque de forma rápida.</p>
+                        <form id="product-form">
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="name">Nome do Produto</label>
+                                    <input type="text" id="name" placeholder="Ex: Copo Térmico Personalizado" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Foto do Produto (Opcional)</label>
+                                    <div class="file-input-wrapper">
+                                        <label for="photo" class="btn">
+                                            <i data-lucide="image" style="width: 16px; height: 16px;"></i> Escolher Imagem
+                                        </label>
+                                        <span id="photo-filename" class="file-name">Nenhum arquivo...</span>
+                                    </div>
+                                    <input type="file" id="photo" accept="image/*" class="file-hidden">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="tag">Tag de Destaque</label>
+                                    <select id="tag">
+                                        <option value="">Nenhuma</option>
+                                        <option value="mais-vendido">Mais Vendido</option>
+                                        <option value="promocao">Em Promoção</option>
+                                        <option value="lancamento">Lançamento</option>
+                                        <option value="esgotado">Esgotado</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="stock">Quantidade em Estoque</label>
+                                    <input type="number" id="stock" min="1" max="999" value="1" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="cost">Valor de Custo (R$)</label>
+                                    <input type="number" id="cost" step="0.01" min="0" placeholder="0,00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sell">Valor de Venda (R$)</label>
+                                    <input type="number" id="sell" step="0.01" min="0" placeholder="0,00" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Lucro Líquido Real (R$)</label>
+                                    <input type="text" id="profit" readonly>
+                                    <div id="fee-preview" class="fee-info">Débito: R$ 0,00 | Crédito: R$ 0,00</div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Margem de Lucro Bruta (%)</label>
+                                    <input type="text" id="percent" readonly>
+                                </div>
+
+                                <div class="form-group full-width">
+                                    <label for="notes">Observações</label>
+                                    <textarea id="notes" placeholder="Adicione dados do fornecedor, nota fiscal, armário ou gaveta de armazenamento..."></textarea>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn" id="btn-save">
+                                <i data-lucide="save" style="width: 16px; height: 16px;"></i> Registrar Produto
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- VIEW: CONSULTAR ESTOQUE -->
+                <div id="view-consult" class="container-view">
+                    <div class="card">
+                        <h2>Consultar Inventário</h2>
+                        <p class="desc">Acompanhe seu estoque completo.</p>
+                        <div class="actions-container" style="align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                            <div class="search-container" style="height: 42px; width: 250px; max-width: 100%;">
+                                <i data-lucide="search"></i>
+                                <input type="text" id="search" placeholder="Pesquisar nome...">
+                            </div>
+                            
+                            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                <div style="position: relative;" class="filter-popover-wrapper">
+                                <button class="btn-secondary" onclick="window.toggleFilterPopover(event)" style="height: 42px; padding: 0 1rem;" title="Filtros Avançados">
+                                    <i data-lucide="filter" style="width: 16px; height: 16px;"></i> Filtros
+                                </button>
+                                
+                                <div id="filter-popover" class="filter-popover" onclick="event.stopPropagation()">
+                                    <div style="font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; color: var(--foreground); border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                                        <i data-lucide="sliders-horizontal" style="width: 16px; height: 16px;"></i> Filtros de Estoque
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                            <label style="font-size: 0.75rem;">Qtd. Mín.</label>
+                                            <input type="number" id="filter-qtd-min" placeholder="0" min="0" style="height: 34px; font-size: 0.85rem;">
+                                        </div>
+                                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                            <label style="font-size: 0.75rem;">Qtd. Máx.</label>
+                                            <input type="number" id="filter-qtd-max" placeholder="999" min="0" style="height: 34px; font-size: 0.85rem;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                            <label style="font-size: 0.75rem;">Preço Mín.</label>
+                                            <input type="number" id="filter-price-min" placeholder="0,00" step="0.01" min="0" style="height: 34px; font-size: 0.85rem;">
+                                        </div>
+                                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                            <label style="font-size: 0.75rem;">Preço Máx.</label>
+                                            <input type="number" id="filter-price-max" placeholder="999,00" step="0.01" min="0" style="height: 34px; font-size: 0.85rem;">
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn-secondary" onclick="window.clearFilters()" style="width: 100%; height: 36px; margin-top: 0.25rem;">
+                                        <i data-lucide="filter-x" style="width: 16px; height: 16px;"></i> Limpar Tudo
+                                    </button>
+                                </div>
+                                </div>
+                                
+                                <button id="btn-select-mode" onclick="window.toggleSelectMode()" class="btn-secondary" style="height: 42px;">
+                                    <i data-lucide="check-square" style="width: 16px; height: 16px;"></i> Selecionar
+                                </button>
+                                
+                                <button class="btn-invert" onclick="window.openRegisterModal()" style="height: 42px;">
+                                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Novo Produto
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TOOLBAR DE SELEÇÃO ATIVA -->
+                        <div id="selection-toolbar" class="selection-toolbar hidden">
+                            <span style="font-weight: 500;"><span id="sel-count">0</span> produto(s) selecionado(s)</span>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="window.openBulkDeleteConfirm()" class="btn-secondary" style="height: 32px; color: var(--destructive); border-color: rgba(239, 68, 68, 0.3);">
+                                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Excluir selecionado(s)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="products-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-select"><input type="checkbox" id="chk-all" onchange="window.toggleAllSelections(this.checked)"></th>
+                                        <th>Produto</th>
+                                        <th class="hide-catalog">Custo</th>
+                                        <th>Venda</th>
+                                        <th class="hide-catalog">Lucro</th>
+                                        <th class="hide-catalog">Margem</th>
+                                        <th class="hide-catalog" style="text-align: center;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                    <tr><td colspan="7" style="text-align: center; color: var(--muted-foreground); padding: 2rem;">Nenhum produto cadastrado.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: CAIXA / VENDAS ATIVAS -->
+                <div id="view-sales" class="container-view">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h2>Bem-vindo!</h2>
+                                <p class="desc" style="margin:0;" id="sales-date-display">Carregando data...</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <div class="view-mode-toggle">
+                                    <button id="btn-sales-view-grid" onclick="window.setSalesViewMode('grid')" class="view-toggle-btn active" title="Visualização em Grid (Blocos)">
+                                        <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                    <button id="btn-sales-view-list" onclick="window.setSalesViewMode('list')" class="view-toggle-btn" title="Visualização em Lista">
+                                        <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                </div>
+                                <button class="btn" style="width: auto;" onclick="window.openCartModal()">
+                                    <i data-lucide="shopping-bag" style="width: 18px; height: 18px;"></i> Nova Venda
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="today-sales-list">
+                            <div class="empty-state">
+                                <i data-lucide="receipt" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+                                <p>Nenhuma venda registrada hoje.</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: right;">
+                            <span style="color: var(--muted-foreground); font-size: 0.875rem;">Total do Dia: </span>
+                            <span id="today-total" style="font-size: 1.5rem; font-weight: 600; color: #10b981;">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: HISTÓRICO DE VENDAS -->
+                <div id="view-history" class="container-view">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <h2 style="margin-bottom: 0.25rem;">Histórico de Faturamento</h2>
+                                <p class="desc" style="margin: 0;">Acompanhe suas métricas de vendas. Filtre por dia específico ou veja o consolidado do mês.</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.25rem;">
+                                <div class="view-mode-toggle">
+                                    <button id="btn-hist-view-grid" onclick="window.setHistoryViewMode('grid')" class="view-toggle-btn" title="Visualização em Grid">
+                                        <i data-lucide="layout-grid" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                    <button id="btn-hist-view-list" onclick="window.setHistoryViewMode('list')" class="view-toggle-btn active" title="Visualização em Lista">
+                                        <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Barra de Filtro -->
+                        <div class="actions-container" style="padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                            <div class="form-group" style="flex: 1; min-width: 180px;">
+                                <label>Período de Busca</label>
+                                <select id="hist-period" onchange="window.handleHistPeriodChange()">
+                                    <option value="today">Vendas de Hoje</option>
+                                    <option value="day">Por Dia Específico</option>
+                                    <option value="month">Por Mês Específico</option>
+                                </select>
+                            </div>
+                            <div class="form-group hidden" id="hist-date-container" style="flex: 1; min-width: 180px;">
+                                <label>Selecione a Data</label>
+                                <input type="date" id="hist-date">
+                            </div>
+                            <div class="form-group hidden" id="hist-month-container" style="flex: 1; min-width: 180px;">
+                                <label>Selecione o Mês</label>
+                                <select id="hist-month"></select>
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 160px;">
+                                <label>Forma de Pagamento</label>
+                                <select id="hist-payment-filter" onchange="window.renderHistory()">
+                                    <option value="all">Todas as Formas</option>
+                                    <option value="Pix">Pix</option>
+                                    <option value="Crédito">Cartão de Crédito</option>
+                                    <option value="Débito">Cartão de Débito</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Múltiplo">Múltiplo</option>
+                                    <option value="Fiado">Fiado</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; min-width: 140px;">
+                                <label>Buscar por ID</label>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted-foreground); font-weight: 600;">#</span>
+                                    <input type="text" id="hist-id-filter" placeholder="Ex: 12345" style="padding-left: 25px;" oninput="window.renderHistory()">
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: flex-end;">
+                                <button class="btn" onclick="window.renderHistory()" style="width: auto; padding: 0 1.5rem; margin-top: 22px;">
+                                    <i data-lucide="filter" style="width: 16px; height: 16px;"></i> Consultar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cards de Indicadores (KPIs) -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+                            <div class="card" style="padding: 1.25rem; box-shadow: none; border: 1px solid var(--border);">
+                                <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="dollar-sign" style="width: 16px; height: 16px;"></i> Faturamento Bruto</div>
+                                <div style="font-size: 1.5rem; font-weight: 600; color: #10b981;" id="hist-gross">R$ 0,00</div>
+                            </div>
+                            <div class="card" style="padding: 1.25rem; box-shadow: none; border: 1px solid var(--border);">
+                                <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="shopping-bag" style="width: 16px; height: 16px;"></i> Total de Vendas</div>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="hist-count">0</div>
+                            </div>
+                            <div class="card" style="padding: 1.25rem; box-shadow: none; border: 1px solid var(--border);">
+                                <div style="font-size: 0.875rem; color: var(--muted-foreground); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="trending-up" style="width: 16px; height: 16px;"></i> Ticket Médio</div>
+                                <div style="font-size: 1.5rem; font-weight: 600;" id="hist-ticket">R$ 0,00</div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Vendas -->
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem; margin-top: -0.5rem;">
+                            <div style="position: relative;">
+                                <button class="btn-icon-tbl" onclick="document.getElementById('hist-sort-menu').classList.toggle('hidden')" title="Organizar por..." style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: transparent;">
+                                    <i data-lucide="arrow-up-down" style="width: 16px; height: 16px;"></i>
+                                </button>
+                                <div id="hist-sort-menu" class="autocomplete-dropdown hidden" style="width: max-content; right: 0; left: auto; padding: 0.25rem;">
+                                    <div class="autocomplete-item" onclick="window.setHistSort('date_desc')" style="border-radius: var(--radius);"><i data-lucide="calendar" style="width: 14px; height: 14px; margin-right: 8px;"></i> Mais Recente</div>
+                                    <div class="autocomplete-item" onclick="window.setHistSort('date_asc')" style="border-radius: var(--radius);"><i data-lucide="calendar-clock" style="width: 14px; height: 14px; margin-right: 8px;"></i> Mais Antigo</div>
+                                    <div class="autocomplete-item" onclick="window.setHistSort('val_desc')" style="border-radius: var(--radius);"><i data-lucide="arrow-down-0-1" style="width: 14px; height: 14px; margin-right: 8px;"></i> Maior Valor</div>
+                                    <div class="autocomplete-item" onclick="window.setHistSort('val_asc')" style="border-radius: var(--radius);"><i data-lucide="arrow-up-1-0" style="width: 14px; height: 14px; margin-right: 8px;"></i> Menor Valor</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="history-sales-list" style="display: flex; flex-direction: column;">
+                            <!-- Itens injetados via JS -->
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: CONFIGURAÇÕES DO SISTEMA -->
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 950px; padding: 0; overflow: hidden; display: flex; flex-direction: column; height: 85vh;">
+            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: var(--card);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="settings" style="width: 20px; height: 20px; color: var(--muted-foreground);"></i>
+                    <h2 style="margin: 0; font-size: 1.15rem; font-weight: 600;">Configurações do Sistema</h2>
+                </div>
+                <button class="modal-close" style="position: static; padding: 0.4rem; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; background: var(--muted);" onclick="window.closeSettingsModal()"><i data-lucide="x" style="width: 16px; height: 16px;"></i></button>
+            </div>
+            
+            <div style="display: flex; flex: 1; overflow: hidden;">
+                <!-- SIDEBAR DOS AJUSTES -->
+                <div class="settings-sidebar" style="width: 240px; border-right: 1px solid var(--border); background: var(--card); padding: 1rem 0.75rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0;">
+                    <button class="settings-tab-btn active" onclick="window.switchSettingsTab('vendas')">
+                        <i data-lucide="shopping-cart"></i> Vendas e PDV
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('estoque')">
+                        <i data-lucide="package"></i> Estoque & Backup
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('migracao')">
+                        <i data-lucide="database"></i> Migração de Dados
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('recibos')">
+                        <i data-lucide="receipt"></i> Recibos Térmicos
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('aparencia')">
+                        <i data-lucide="palette"></i> Aparência e Logo
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('taxas')">
+                        <i data-lucide="percent"></i> Taxas de Cartões
+                    </button>
+                    <button class="settings-tab-btn" onclick="window.switchSettingsTab('seguranca')">
+                        <i data-lucide="shield-alert"></i> Segurança e Senha
+                    </button>
+                </div>
+                
+                <!-- ÁREA DE CONTEÚDO DOS AJUSTES -->
+                <div class="settings-content-area" style="flex: 1; padding: 2rem; overflow-y: auto; background: var(--card);">
+                    
+                    <div id="settings-vendas" class="settings-section-view active">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="shopping-cart" style="color: var(--muted-foreground);"></i> Vendas e PDV</h3>
+                        <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--muted);">
+                            <input type="checkbox" id="setting-autocomplete" onclick="window.requestAutocompleteAuth(event)" style="width: 20px; height: 20px;">
+                            <label for="setting-autocomplete" style="margin: 0; cursor:pointer; font-size: 0.95rem;">Ativar Auto-completar Produto na Venda</label>
+                        </div>
+                        <div class="form-group full-width" style="margin-bottom: 2rem;">
+                            <label for="setting-ntfy-topic">Tópico Ntfy.sh (Notificações Push no Celular)</label>
+                            <input type="text" id="setting-ntfy-topic" placeholder="Ex: minhaloja_vendas_abc123" onchange="window.saveNtfyTopic(this.value)">
+                            <p class="desc" style="margin-top: 0.5rem; font-size: 0.8rem;">Baixe o app <b>ntfy</b> (grátis) no iPhone/Android, clique no "+" e se inscreva neste exato tópico para ser notificado de novas vendas em tempo real.</p>
+                        </div>
+                    </div>
+
+                    <div id="settings-estoque" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="package" style="color: var(--muted-foreground);"></i> Estoque & Backup</h3>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Exportar Backup</label>
+                            <p class="desc" style="margin-bottom: 1rem; font-size: 0.85rem;">Faça o download de um arquivo contendo todo o seu estoque, que pode ser restaurado posteriormente.</p>
+                            <button onclick="window.openBackupModal()" class="btn-secondary" style="width: fit-content; font-size: 0.8rem; height: 32px; padding: 0 0.75rem;">
+                                <i data-lucide="hard-drive" style="width: 14px; height: 14px;"></i> Fazer Backup
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Restaurar estoque a partir de backup</label>
+                            <p class="desc" style="margin-bottom: 1rem; font-size: 0.85rem;">Envie o arquivo CSV de backup para restaurar os produtos. Isso pode adicionar ou sobrescrever itens (sem imagem).</p>
+                            <div class="file-input-wrapper" style="max-width: 400px;">
+                                <label class="btn-secondary" style="margin: 0; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; width: auto; font-size: 0.8rem; height: 32px; padding: 0 0.75rem;">
+                                    <i data-lucide="upload" style="width: 14px; height: 14px;"></i> Selecionar Backup
+                                    <input type="file" id="backup-upload" accept=".csv" class="file-hidden" onchange="window.handleBackupUpload(event)">
+                                </label>
+                                <span class="file-name" id="backup-filename" style="margin-left: 0.5rem;">Nenhum arquivo...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-migracao" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="database" style="color: var(--muted-foreground);"></i> Migração e Importação de Dados</h3>
+                        <p class="desc" style="margin-bottom: 1.5rem;">Importe relatórios antigos do Excel (.xlsx) para consolidar todo o seu histórico em um único sistema de nuvem.</p>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Arquivo de Relatório do Excel (.xlsx)</label>
+                                <div class="file-input-wrapper" style="max-width: 400px;">
+                                    <label for="excel-upload" class="btn btn-secondary" style="height: 32px; margin: 0; font-size: 0.8rem;">
+                                        <i data-lucide="file-spreadsheet" style="width: 14px; height: 14px;"></i> Importar Planilha
+                                    </label>
+                                    <span id="excel-filename" class="file-name" style="margin-left: 0.5rem;">Nenhum arquivo...</span>
+                                </div>
+                                <input type="file" id="excel-upload" accept=".xlsx, .xls" class="file-hidden">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-recibos" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="receipt" style="color: var(--muted-foreground);"></i> Dados para Recibos Térmicos</h3>
+                        <p class="desc" style="margin-bottom: 1.5rem;">Configure os dados da sua loja para emissão de comprovantes em impressoras não fiscais (58mm ou 80mm).</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nome Fantasia</label>
+                                <input type="text" id="store-name" value="JÚ MAGAZINE" onchange="localStorage.setItem('sys_store_name', this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>CNPJ / CPF / Telefone</label>
+                                <input type="text" id="store-doc" placeholder="Opcional" onchange="localStorage.setItem('sys_store_doc', this.value)">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Endereço Completo</label>
+                                <input type="text" id="store-address" placeholder="Opcional" onchange="localStorage.setItem('sys_store_address', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-aparencia" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="palette" style="color: var(--muted-foreground);"></i> Aparência e Imagem Corporativa</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Alternar Tema Visual</label>
+                                <button class="btn-secondary" onclick="window.toggleTheme()" style="justify-content: flex-start; padding-left: 1rem;">
+                                    <i data-lucide="sun-moon" id="theme-icon" style="width: 16px; height: 16px;"></i> Trocar Cor (Escuro/Claro)
+                                </button>
+                            </div>
+                            <div class="form-group">
+                                <label>Logo de Empresa (Inclusão nos Orçamentos em PDF)</label>
+                                <div class="file-input-wrapper">
+                                    <label for="logo-upload" class="btn" style="height: 32px; margin: 0; font-size: 0.8rem;">
+                                        <i data-lucide="image" style="width: 14px; height: 14px;"></i> Subir Logo
+                                    </label>
+                                    <span id="logo-filename" class="file-name" style="margin-left: 0.5rem;">Nenhum arquivo...</span>
+                                </div>
+                                <input type="file" id="logo-upload" accept="image/*" class="file-hidden">
+                                <span class="fee-info" id="logo-status" style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: 0.25rem;">Logo padrão em branco.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-taxas" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="percent" style="color: var(--muted-foreground);"></i> Taxas das Máquinas de Cartões (%)</h3>
+                        <p class="desc" style="margin-bottom: 1.5rem;">Defina as alíquotas cobradas pela sua maquininha para calcular o lucro líquido real.</p>
+                        <form id="fees-form" class="form-grid">
+                            <div class="form-group">
+                                <label>Alíquota Débito (%)</label>
+                                <input type="number" id="tax-debit" step="0.01" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Alíquota Crédito à Vista (%)</label>
+                                <input type="number" id="tax-credit" step="0.01" min="0" value="0">
+                            </div>
+                            <div class="form-group full-width" style="margin-top: 0.5rem;">
+                                <button type="submit" class="btn" style="width: auto; padding: 0 2rem;">
+                                    <i data-lucide="save" style="width: 16px; height: 16px;"></i> Salvar Novas Alíquotas
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="settings-seguranca" class="settings-section-view hidden">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="shield-alert" style="color: var(--muted-foreground);"></i> Autenticação e Senha Administrativa</h3>
+                        <p class="desc" style="margin-bottom: 1.5rem;">Sua senha administrativa protege ações críticas como exclusões e alterações no sistema.</p>
+                        <form id="password-form" class="form-grid">
+                            <div class="form-group">
+                                <label>Senha Atual</label>
+                                <input type="password" id="current-pwd" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nova Senha</label>
+                                <input type="password" id="new-pwd" required>
+                            </div>
+                            <div class="form-group full-width" style="margin-top: 0.5rem;">
+                                <button type="submit" class="btn btn-invert" style="width: auto; padding: 0 2rem;">
+                                    <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i> Alterar Chave Admin
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SEGURANÇA / AUTH -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px;">
+            <button class="modal-close" onclick="window.closeAuthModal()"><i data-lucide="x"></i></button>
+            <h2>Senha de Segurança</h2>
+            <p class="desc" style="margin-bottom:1.25rem;">Digite sua senha administrativa para autorizar a modificação.</p>
+            <form id="auth-form">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label>Senha Admin</label>
+                    <input type="password" id="admin-pwd" required autofocus>
+                </div>
+                <button type="submit" class="btn"><i data-lucide="shield-check"></i> Autorizar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: VISUALIZAR OBSERVAÇÕES -->
+    <div id="notes-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 420px;">
+            <button class="modal-close" onclick="document.getElementById('notes-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+            <h2 style="display:flex; align-items:center; gap:0.5rem;"><i data-lucide="sticky-note" style="color:var(--muted-foreground);"></i> Detalhes Internos</h2>
+            <p id="notes-content" style="white-space: pre-wrap; font-size: 0.9rem; line-height: 1.6; margin-top: 1rem; color:var(--muted-foreground);"></p>
+        </div>
+    </div>
+
+    <!-- MODAL: EDITAR PRODUTO -->
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="modal-content card">
+            <button class="modal-close" onclick="window.closeEditModal()"><i data-lucide="x"></i></button>
+            <h2>Modificar Produto</h2>
+            <p class="desc">Ajuste os valores, tags ou nome do produto selecionado.</p>
+            <form id="edit-form">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nome Comercial</label>
+                        <input type="text" id="edit-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Substituir Foto</label>
+                        <div class="file-input-wrapper">
+                            <label for="edit-photo" class="btn"><i data-lucide="image" style="width: 16px; height: 16px;"></i> Mudar</label>
+                            <span id="edit-photo-filename" class="file-name">Nenhum arquivo...</span>
+                        </div>
+                        <input type="file" id="edit-photo" accept="image/*" class="file-hidden">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tag de Destaque</label>
+                        <select id="edit-tag">
+                            <option value="">Nenhuma</option>
+                            <option value="mais-vendido">Mais Vendido</option>
+                            <option value="promocao">Em Promoção</option>
+                            <option value="lancamento">Lançamento</option>
+                            <option value="esgotado">Esgotado</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Quantidade em Estoque</label><input type="number" id="edit-stock" min="1" max="999" required></div>
+                    <div class="form-group"><label>Valor de Custo (R$)</label><input type="number" id="edit-cost" step="0.01" min="0" required></div>
+                    <div class="form-group"><label>Valor de Venda (R$)</label><input type="number" id="edit-sell" step="0.01" min="0" required></div>
+                    <div class="form-group full-width"><label>Anotações do Produto</label><textarea id="edit-notes"></textarea></div>
+                </div>
+                <button type="submit" class="btn" id="btn-update"><i data-lucide="check"></i> Atualizar Dados</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: PDV CAIXA (CARRINHO E FORMA DE PAGAMENTO) -->
+    <div id="cart-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 1000px;">
+            <button class="modal-close" onclick="window.closeCartModal()"><i data-lucide="x"></i></button>
+            <h2>Formulário de Vendas</h2>
+            
+            <div class="pdv-container">
+                <!-- Esquerda: Adicionar Item -->
+                <div class="pdv-form">
+                    <h3 style="font-size: 1rem; margin-top: 0; margin-bottom: 1rem;">Adicionar Item</h3>
+                    <form id="add-to-cart-form">
+                        <div class="form-group" style="margin-bottom: 1.25rem; position: relative;">
+                            <label>Produto</label>
+                            <input type="text" id="pdv-product" placeholder="Digite o nome do produto..." autocomplete="off" required oninput="window.handleProductAutocomplete()" onfocus="window.handleProductAutocomplete()">
+                            <div id="pdv-autocomplete-list" class="autocomplete-dropdown hidden"></div>
+                        </div>
+                        
+                        <div class="form-grid" style="grid-template-columns: 1fr 2fr; margin-bottom: 1.25rem;">
+                            <div class="form-group">
+                                <label>Quantidade</label>
+                                <input type="number" id="pdv-qtd" value="1" min="1" oninput="window.calcMultiPayment()" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Preço Unitário Base (R$)</label>
+                                <input type="number" id="pdv-price" step="0.01" min="0" oninput="window.calcMultiPayment()" required>
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.25rem;">
+                            <div class="form-group">
+                                <label>Desconto (%)</label>
+                                <input type="number" id="pdv-discount-percent" step="0.01" min="0" placeholder="0" oninput="window.handleDiscountChange('percent')">
+                            </div>
+                            <div class="form-group">
+                                <label>Desconto (R$)</label>
+                                <input type="number" id="pdv-discount-value" step="0.01" min="0" placeholder="0,00" oninput="window.handleDiscountChange('value')">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label>Forma de Pagamento</label>
+                            <select id="pdv-payment" onchange="window.handlePaymentChange()" required>
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Pix">Pix</option>
+                                <option value="Débito">Cartão de Débito</option>
+                                <option value="Crédito">Cartão de Crédito</option>
+                                <option value="Fiado">Fiado</option>
+                                <option value="Multiplo">Múltiplo (Dividir Pagamento)</option>
+                            </select>
+                        </div>
+
+                        <!-- Opções Dinâmicas conforme Método de Pagamento -->
+                        <div id="pdv-credit-options" class="form-group hidden" style="margin-top: -0.5rem; margin-bottom: 1.25rem;">
+                            <label>Parcelas</label>
+                            <select id="pdv-installments">
+                                <option value="1">1x (À vista)</option><option value="2">2x</option><option value="3">3x</option>
+                                <option value="4">4x</option><option value="5">5x</option><option value="6">6x</option>
+                                <option value="7">7x</option><option value="8">8x</option><option value="9">9x</option>
+                                <option value="10">10x</option><option value="11">11x</option><option value="12">12x</option>
+                            </select>
+                        </div>
+
+                        <div id="pdv-fiado-options" class="hidden" style="margin-top: -0.5rem; margin-bottom: 1.25rem; background: var(--muted); padding: 0.85rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="pdv-has-entry" onchange="window.handleEntryChange()">
+                                <label for="pdv-has-entry" style="margin: 0; cursor:pointer;">Houve adiantamento / entrada?</label>
+                            </div>
+                            <div id="pdv-entry-group" class="form-group hidden" style="margin-top: 0.75rem;">
+                                <label>Valor do Adiantamento (R$)</label>
+                                <input type="number" id="pdv-entry-value" step="0.01" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Opção Múltipla (Dividir Pagamento) -->
+                        <div id="pdv-multi-options" class="hidden" style="margin-top: -0.5rem; margin-bottom: 1.25rem; background: var(--muted); padding: 0.85rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                            <label style="margin-bottom: 0.75rem; display:block; font-size: 0.85rem;">Dividir Pagamento</label>
+                            
+                            <div id="multi-payments-container"></div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border);">
+                                <span id="multi-total-remaining" style="font-size: 0.85rem; font-weight: 600; color: var(--destructive);">Falta: R$ 0,00</span>
+                                <button type="button" class="btn-secondary" onclick="window.addMultiPaymentRow()" style="height: 32px; font-size: 0.8rem; padding: 0 0.75rem;">
+                                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Adicionar Forma
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" style="margin-top: 0.5rem;">
+                            <i data-lucide="plus"></i> Adicionar Item
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resumo Geral da Compra -->
+                <div class="pdv-cart">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <h3 style="font-size: 1.05rem; font-weight: 600; margin: 0;">Carrinho</h3>
+                        <div style="font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="toggle-group-inst" onchange="window.renderCart()">
+                            <label for="toggle-group-inst" style="margin: 0; cursor:pointer;">Parcela em conjunto</label>
+                        </div>
+                    </div>
+                    
+                    <div id="group-inst-toolbar" class="hidden" style="margin-bottom: 1rem; background: var(--muted); padding: 0.75rem; border-radius: var(--radius); border: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="group-inst-select" style="height: 32px; font-size: 0.85rem; flex: 1;">
+                            <option value="1">1x (À vista)</option><option value="2">2x</option><option value="3">3x</option>
+                            <option value="4">4x</option><option value="5">5x</option><option value="6">6x</option>
+                            <option value="7">7x</option><option value="8">8x</option><option value="9">9x</option>
+                            <option value="10">10x</option><option value="11">11x</option><option value="12">12x</option>
+                        </select>
+                        <button class="btn-secondary" style="height: 32px; padding: 0 0.75rem;" onclick="window.applyGroupInstallments()">Aplicar a Todos os Selecionados</button>
+                    </div>
+
+                    <div class="cart-items" id="cart-items-list">
+                        <div style="text-align: center; color: var(--muted-foreground); padding: 3rem 0; font-size: 0.9rem;">
+                            Carrinho vazio.
+                        </div>
+                    </div>
+                    
+                    <div class="cart-total" id="cart-total-display">
+                        Total: R$ 0,00
+                    </div>
+
+                    <button class="btn btn-active-dark" id="btn-finish-sale" onclick="window.finishSale()" disabled>
+                        <i data-lucide="circle-check"></i> Finalizar Venda
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHAMENTO DE TRANSAÇÃO DO HISTÓRICO -->
+    <div id="sale-details-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 520px;">
+            <button class="modal-close" onclick="window.closeSaleDetails()"><i data-lucide="x"></i></button>
+            
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--muted); display: flex; align-items: center; justify-content: center; color: var(--foreground); border:1px solid var(--border)">
+                    <i data-lucide="receipt" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 1.35rem;" id="details-sale-title">Transação</h2>
+                    <span id="details-sale-time" style="color: var(--muted-foreground); font-size: 0.85rem;"></span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 0.6rem; font-weight: 600; font-size: 0.9rem;">Itens Adquiridos:</div>
+            <div class="cart-items" id="details-items-list" style="max-height: 280px; margin-bottom: 1.5rem; background: var(--background);">
+                <!-- Itens auto-injetados pelo motor js -->
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 1.25rem; margin-bottom: 1.75rem;">
+                <span style="font-weight: 600; color: var(--muted-foreground);">Total Geral</span>
+                <span style="font-size: 1.6rem; font-weight: 700; color: #10b981;" id="details-sale-total"></span>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button class="btn-secondary" onclick="window.printReceipt(window.currentViewSaleId)">
+                    <i data-lucide="printer" style="width: 16px; height: 16px;"></i> Imprimir
+                </button>
+                <button class="btn-secondary" onclick="window.requestAuth('edit-sale', window.currentViewSaleId)">
+                    <i data-lucide="pencil" style="width: 16px; height: 16px;"></i> Editar Venda
+                </button>
+                <button class="btn-secondary" style="color: var(--destructive); border-color: rgba(244, 63, 94, 0.3);" onclick="window.requestAuth('delete-sale', window.currentViewSaleId)">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Excluir Venda
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- CONTAINER OCULTO DE IMPRESSÃO TÉRMICA -->
+    <div id="print-receipt-container"></div>
+
+    <!-- MODAL: PERFIL / CONTA -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 500px;">
+            <button class="modal-close" onclick="window.closeProfileModal()"><i data-lucide="x"></i></button>
+            <h2>Minha Conta</h2>
+            <p class="desc" style="margin-bottom: 2rem;">Atualize suas informações de perfil.</p>
+            <form id="profile-form" onsubmit="window.saveProfile(event)">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Nome de Exibição</label>
+                        <input type="text" id="profile-name-input" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Foto de Perfil</label>
+                        <div class="file-input-wrapper">
+                            <label for="profile-photo" class="btn">
+                                <i data-lucide="image" style="width: 16px; height: 16px;"></i> Escolher Imagem
+                            </label>
+                            <span id="profile-photo-filename" class="file-name">Nenhum arquivo...</span>
+                        </div>
+                        <input type="file" id="profile-photo" accept="image/*" class="file-hidden">
+                    </div>
+                    <div class="form-group full-width" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                        <label>Senha Admin (necessária para salvar)</label>
+                        <input type="password" id="profile-admin-pwd" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn">
+                    <i data-lucide="save"></i> Salvar Alterações
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: NOTIFICAÇÕES -->
+    <div id="notifications-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 600px;">
+            <button class="modal-close" onclick="window.closeNotificationsModal()"><i data-lucide="x"></i></button>
+            <h2>Notificações e Changelogs</h2>
+            <p class="desc" style="margin-bottom: 1.5rem;">Fique por dentro das novidades do sistema.</p>
+            
+            <div id="changelogs-container-main" style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                <div style="text-align: center; color: var(--muted-foreground); font-size: 0.9rem; padding: 2rem 0;">Carregando novidades...</div>
+            </div>
+        </div>
+    </div>
+    <!-- MODAIS DE EXCLUSÃO DE PRODUTO (INDIVIDUAL) -->
+    <div id="delete-confirm1-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px; padding: 2.5rem 2rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.1); color: var(--destructive); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Confirmar Exclusão</h2>
+            <p class="desc" style="margin-bottom: 1.75rem;">O produto será excluído permanentemente do banco de dados na nuvem. Deseja prosseguir?</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button class="btn-secondary" style="flex: 1;" onclick="window.closeDeleteConfirm1()">Cancelar</button>
+                <button class="btn" style="flex: 1; background: var(--destructive); color: white;" onclick="window.openDeleteConfirm2()">Sim, quero excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-confirm2-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px; padding: 2.5rem 2rem; text-align: center;">
+            <div id="delete-confirm2-content"></div>
+            <h2 style="margin-bottom: 0.75rem; margin-top: 1.25rem; font-size: 1.25rem;">Confirmação Final</h2>
+            <p class="desc" style="margin-bottom: 1.75rem;">Você está prestes a excluir este produto. <strong>Esta ação não pode ser desfeita.</strong></p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button class="btn-secondary" style="flex: 1;" onclick="window.closeDeleteConfirm2()">Cancelar</button>
+                <button id="btn-execute-delete" class="btn" style="flex: 1; background: var(--destructive); color: white;" onclick="window.executeDeleteProductAuth()">Excluir Definitivamente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EXCLUSÃO EM MASSA -->
+    <div id="bulk-delete-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 400px; padding: 2.5rem 2rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239,68,68,0.1); color: var(--destructive); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Excluir Produtos</h2>
+            <p class="desc" style="margin-bottom: 1.75rem;">Você está prestes a excluir permanentemente <strong id="bulk-delete-count" style="color: var(--foreground); font-size: 1.1rem;">0</strong> produto(s) do banco de dados em nuvem. <strong>Esta ação não pode ser desfeita.</strong> Deseja continuar?</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button class="btn-secondary" style="flex: 1;" onclick="window.closeBulkDeleteConfirm()">Cancelar</button>
+                <button id="btn-execute-bulk-delete" class="btn" style="flex: 1; background: var(--destructive); color: white;" onclick="window.executeBulkDeleteAuth()">Excluir Todos</button>
+            </div>
+        </div>
+    </div>
+    <div id="backup-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px; padding: 2.5rem 2rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <i data-lucide="hard-drive-download" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Confirmar Backup</h2>
+            <p class="desc" style="margin-bottom: 1.75rem;">Isto irá baixar um arquivo contendo todo o seu estoque, que pode ser restaurado depois nos Ajustes. Deseja prosseguir?</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button class="btn-secondary" style="flex: 1;" onclick="window.closeBackupModal()">Cancelar</button>
+                <button class="btn" style="flex: 1;" onclick="window.downloadBackupCSV()">Fazer Backup</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -150,6 +150,10 @@ A cada nova venda concluída no PDV, o Axis envia automaticamente uma notificaç
 ju-magazine-axis/
 ├── index.html                   # Landing page moderna com animação 3D Tilt e partículas
 ├── README.md                    # Documentação oficial do projeto
+├── mobile/                      # Aplicativo Mobile nativo em React Native + Expo (iOS / Android)
+│   ├── App.js                   # Entry point, Splash screen e Providers
+│   ├── package.json             # Dependências e scripts do React Native
+│   └── src/                     # Telas, componentes Apple/shadcn, navegação e contextos
 ├── assets/
 │   ├── img/
 │   │   └── preview.png          # Captura da interface do dashboard

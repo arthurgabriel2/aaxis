@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Acessar Conta - Axis Mobile</title>
+    <!-- Roteamento inteligente de dispositivo (Mobile vs Desktop) -->
+    <script src="../assets/scripts/device-router.js"></script>
+    <script>
+        window.routeDevice('mobile-login');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/styles/mobile.css">
+
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: max(env(safe-area-inset-top), 24px) 24px max(env(safe-area-inset-bottom), 24px) 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 15vh;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+            margin-bottom: 1.25rem;
+        }
+
+        .auth-app-name {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .auth-app-tagline {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-glass-card {
+            background: rgba(18, 18, 22, 0.75);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
+            padding: 24px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+        }
+
+        .auth-switch-mode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .desktop-version-link {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            text-decoration: none;
+            padding: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="mobile-toast-container" class="mobile-toast-container"></div>
+
+    <div class="login-wrapper">
+        <!-- Brand Header -->
+        <div class="auth-hero">
+            <div class="auth-logo-badge">
+                <i data-lucide="sparkles" style="width: 32px; height: 32px; color: #ffffff;"></i>
+            </div>
+            <h1 class="auth-app-name">AXIS</h1>
+            <p class="auth-app-tagline" id="auth-subtitle">Gestão comercial inteligente</p>
+        </div>
+
+        <!-- Auth Form Card -->
+        <div class="auth-glass-card" id="auth-box">
+            <form id="mobile-auth-form">
+                <div id="group-name" class="form-group-mobile hidden">
+                    <label>Nome da Loja ou Usuário</label>
+                    <input type="text" id="input-name" class="input-mobile" placeholder="Ex: Jú Magazine">
+                </div>
+
+                <div class="form-group-mobile">
+                    <label>E-mail</label>
+                    <input type="email" id="input-email" class="input-mobile" required placeholder="seu@email.com" autocomplete="email">
+                </div>
+
+                <div class="form-group-mobile">
+                    <label>Senha</label>
+                    <input type="password" id="input-password" class="input-mobile" required placeholder="••••••••" autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="btn-auth-submit" class="btn-glass btn-glass-primary" style="margin-top: 8px;">
+                    Entrar no Sistema
+                </button>
+            </form>
+
+            <div class="auth-switch-mode">
+                <span id="switch-label">Não tem uma conta?</span>
+                <button type="button" id="btn-toggle-mode" class="auth-switch-btn">Criar conta</button>
+            </div>
+        </div>
+
+        <!-- Email Verification Screen -->
+        <div class="auth-glass-card hidden" id="verify-box">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(59, 130, 246, 0.15); color: #60a5fa; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i data-lucide="mail" style="width: 26px; height: 26px;"></i>
+                </div>
+                <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Confirme seu E-mail</h2>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+                    Enviamos um link de validação para o seu endereço de e-mail. Toque no link recebido para ativar seu acesso.
+                </p>
+            </div>
+
+            <button type="button" id="btn-verify-checked" class="btn-glass btn-glass-primary">
+                Já confirmei, entrar
+            </button>
+            <button type="button" id="btn-verify-resend" class="btn-glass" style="margin-top: 8px;">
+                Reenviar e-mail de ativação
+            </button>
+            <button type="button" id="btn-verify-back" class="btn-glass" style="margin-top: 8px; background: transparent; border: none; color: var(--text-secondary);">
+                Voltar ao login
+            </button>
+        </div>
+
+        <!-- Footer Link -->
+        <div>
+            <a href="../pages/app.html" onclick="window.setDevicePreference('desktop');" class="desktop-version-link">
+                Acessar versão Desktop / PC ➔
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2ZI1GpBEdn5b5wItH4E5ZBQMYpUs-o5s",
+            authDomain: "magazinepdv.firebaseapp.com",
+            projectId: "magazinepdv",
+            storageBucket: "magazinepdv.firebasestorage.app",
+            messagingSenderId: "178719555159",
+            appId: "1:178719555159:web:b7fbd4cb2a07c2313ded12"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const pdvAppId = 'pdv-pro-v1';
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && !user.isAnonymous && (user.emailVerified || user.email === 'jumagazinestore@gmail.com')) {
+                window.location.replace("index.html");
+            }
+        });
+
+        lucide.createIcons();
+
+        let isLoginMode = true;
+
+        const form = document.getElementById('mobile-auth-form');
+        const btnSubmit = document.getElementById('btn-auth-submit');
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        const switchLabel = document.getElementById('switch-label');
+        const groupName = document.getElementById('group-name');
+        const authSubtitle = document.getElementById('auth-subtitle');
+        const authBox = document.getElementById('auth-box');
+        const verifyBox = document.getElementById('verify-box');
+
+        function showMobileToast(msg, type = 'info') {
+            const container = document.getElementById('mobile-toast-container');
+            const toast = document.createElement('div');
+            toast.className = `mobile-toast ${type}`;
+            let icon = 'info';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'alert-triangle';
+
+            toast.innerHTML = `<i data-lucide="${icon}" style="width: 18px; height: 18px;"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-15px) scale(0.95)';
+                setTimeout(() => toast.remove(), 250);
+            }, 3200);
+        }
+
+        function clearOldUserCache(newUid) {
+            const prevUid = localStorage.getItem('sys_current_user_id');
+            if (prevUid !== newUid) {
+                localStorage.removeItem('sys_profile_name');
+                localStorage.removeItem('sys_profile_photo');
+                localStorage.removeItem('sys_admin_pwd');
+            }
+            if (newUid) {
+                localStorage.setItem('sys_current_user_id', newUid);
+            } else {
+                localStorage.removeItem('sys_current_user_id');
+            }
+        }
+
+        btnToggle.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            if (isLoginMode) {
+                btnSubmit.innerText = "Entrar no Sistema";
+                btnToggle.innerText = "Criar conta";
+                switchLabel.innerText = "Não tem uma conta?";
+                groupName.classList.add('hidden');
+                document.getElementById('input-name').required = false;
+                authSubtitle.innerText = "Gestão comercial inteligente";
+            } else {
+                btnSubmit.innerText = "Criar Nova Conta";
+                btnToggle.innerText = "Fazer login";
+                switchLabel.innerText = "Já tem uma conta?";
+                groupName.classList.remove('hidden');
+                document.getElementById('input-name').required = true;
+                authSubtitle.innerText = "Cadastre-se para começar";
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('input-email').value.trim();
+            const pass = document.getElementById('input-password').value;
+            const name = document.getElementById('input-name').value.trim();
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "Aguarde...";
+
+            try {
+                if (isLoginMode) {
+                    const cred = await signInWithEmailAndPassword(auth, email, pass);
+                    if (!cred.user.emailVerified && cred.user.email !== 'jumagazinestore@gmail.com') {
+                        authBox.classList.add('hidden');
+                        verifyBox.classList.remove('hidden');
+                        try {
+                            await sendEmailVerification(cred.user);
+                        } catch(e) {}
+                        showMobileToast("Confirme seu e-mail para prosseguir.", "info");
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerText = "Entrar no Sistema";
+                        return;
+                    }
+                    clearOldUserCache(cred.user.uid);
+                    showMobileToast("Login realizado com sucesso!", "success");
+                    setTimeout(() => window.location.replace("index.html"), 600);
+                } else {
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    const userId = cred.user.uid;
+
+                    if (name) {
+                        try {
+                            await updateProfile(cred.user, { displayName: name });
+                        } catch (err) {}
+                    }
+
+                    try {
+                        const userPath = email === 'jumagazinestore@gmail.com'
+                            ? ['artifacts', pdvAppId, 'public', 'data', 'usuarios', userId]
+                            : ['artifacts', pdvAppId, 'users', userId, 'usuarios', userId];
+                        const userDoc = doc(db, ...userPath);
+                        await setDoc(userDoc, {
+                            name: name || email.split('@')[0],
+                            email: email,
+                            createdAt: new Date().toISOString(),
+                            tourCompleted: false
+                        }, { merge: true });
+                    } catch (dbErr) {
+                        console.warn("Aviso ao salvar perfil mobile:", dbErr);
+                    }
+
+                    try {
+                        await sendEmailVerification(cred.user);
+                    } catch (emailErr) {}
+
+                    clearOldUserCache(userId);
+                    if (name) localStorage.setItem('sys_profile_name', name);
+
+                    authBox.classList.add('hidden');
+                    verifyBox.classList.remove('hidden');
+                    showMobileToast("Conta criada! Verifique seu e-mail.", "success");
+                }
+            } catch (err) {
+                console.error(err);
+                if (err.code === 'auth/email-already-in-use') {
+                    showMobileToast("Este e-mail já está em uso.", "error");
+                } else if (err.code === 'auth/weak-password') {
+                    showMobileToast("A senha deve ter no mínimo 6 dígitos.", "error");
+                } else if (err.code === 'auth/invalid-email') {
+                    showMobileToast("E-mail em formato inválido.", "error");
+                } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    showMobileToast("E-mail ou senha incorretos.", "error");
+                } else {
+                    showMobileToast("Falha na autenticação.", "error");
+                }
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = isLoginMode ? "Entrar no Sistema" : "Criar Nova Conta";
+            }
+        });
+
+        document.getElementById('btn-verify-checked').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                await user.reload();
+                if (user.emailVerified) {
+                    clearOldUserCache(user.uid);
+                    showMobileToast("E-mail confirmado com sucesso!", "success");
+                    setTimeout(() => window.location.replace("index.html"), 600);
+                } else {
+                    showMobileToast("E-mail ainda não validado. Verifique a caixa de SPAM.", "error");
+                }
+            } else {
+                verifyBox.classList.add('hidden');
+                authBox.classList.remove('hidden');
+                showMobileToast("Faça login com seu e-mail e senha.", "info");
+            }
+        });
+
+        document.getElementById('btn-verify-resend').addEventListener('click', async () => {
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await sendEmailVerification(user);
+                    showMobileToast("Novo e-mail de ativação enviado!", "success");
+                } catch (e) {
+                    showMobileToast("Aguarde um instante antes de pedir outro envio.", "error");
+                }
+            }
+        });
+
+        document.getElementById('btn-verify-back').addEventListener('click', () => {
+            verifyBox.classList.add('hidden');
+            authBox.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

@@ -97,7 +97,7 @@ window.getDbPathArray = function(colName) {
     if (window.userEmail === 'jumagazinestore@gmail.com') {
         return ['artifacts', appId, 'public', 'data', colName];
     } else {
-        return ['artifacts', appId, 'users', userId, 'data', colName];
+        return ['artifacts', appId, 'users', userId, colName];
     }
 }
 
@@ -152,10 +152,31 @@ function loadDataFromFirebase() {
     onSnapshot(userDoc, (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.name) localStorage.setItem('sys_profile_name', data.name);
-            if (data.photo) localStorage.setItem('sys_profile_photo', data.photo);
-            if (data.adminPwd) localStorage.setItem('sys_admin_pwd', data.adminPwd);
-            updateProfileUI();
+            const profileName = data.name || (auth.currentUser && auth.currentUser.displayName) || (window.userEmail ? window.userEmail.split('@')[0] : 'Usuário');
+            const profilePhoto = data.photo || (auth.currentUser && auth.currentUser.photoURL) || null;
+            
+            localStorage.setItem('sys_profile_name', profileName);
+            if (profilePhoto) {
+                localStorage.setItem('sys_profile_photo', profilePhoto);
+            } else {
+                localStorage.removeItem('sys_profile_photo');
+            }
+            if (data.adminPwd) {
+                localStorage.setItem('sys_admin_pwd', data.adminPwd);
+            } else {
+                localStorage.setItem('sys_admin_pwd', 'admin');
+            }
+            if (data.tourCompleted) {
+                localStorage.setItem(`sys_tour_completed_${userId}`, 'true');
+            }
+            updateProfileUI(profileName, profilePhoto);
+        } else {
+            const profileName = (auth.currentUser && auth.currentUser.displayName) || (window.userEmail ? window.userEmail.split('@')[0] : 'Usuário');
+            const profilePhoto = (auth.currentUser && auth.currentUser.photoURL) || null;
+            localStorage.setItem('sys_profile_name', profileName);
+            localStorage.removeItem('sys_profile_photo');
+            localStorage.setItem('sys_admin_pwd', 'admin');
+            updateProfileUI(profileName, profilePhoto);
         }
     }, (error) => console.error("Erro Perfil:", error));
 }
@@ -164,10 +185,26 @@ onAuthStateChanged(auth, (user) => {
     if (user && !user.isAnonymous && (user.emailVerified || user.email === 'jumagazinestore@gmail.com')) {
         userId = user.uid;
         window.userEmail = user.email;
-        document.getElementById('account-name-display').innerText = localStorage.getItem('sys_profile_name') || user.email.split('@')[0];
+
+        // Se o usuário logado for diferente do que estava em cache, limpa os dados da conta anterior
+        const prevUserId = localStorage.getItem('sys_current_user_id');
+        if (prevUserId && prevUserId !== user.uid) {
+            localStorage.removeItem('sys_profile_name');
+            localStorage.removeItem('sys_profile_photo');
+            localStorage.removeItem('sys_admin_pwd');
+        }
+        localStorage.setItem('sys_current_user_id', user.uid);
+
+        const currentName = localStorage.getItem('sys_profile_name') || user.displayName || user.email.split('@')[0];
+        const currentPhoto = localStorage.getItem('sys_profile_photo') || user.photoURL || null;
+
+        updateProfileUI(currentName, currentPhoto);
         document.getElementById('account-email-display').innerText = user.email;
         document.body.classList.add('auth-ready'); // Mostra a tela suavemente
         loadDataFromFirebase();
+        if (typeof window.checkAndTriggerOnboarding === 'function') {
+            window.checkAndTriggerOnboarding(user.uid);
+        }
     } else {
         userId = null;
         window.userEmail = null;
@@ -1981,10 +2018,12 @@ window.openProfileModal = () => {
     const popover = document.getElementById('account-popover');
     if (popover) popover.classList.remove('popover-active');
     
-    const savedName = localStorage.getItem('sys_profile_name') || 'Usuário Logado';
+    const savedName = localStorage.getItem('sys_profile_name') || (auth.currentUser && auth.currentUser.displayName) || (window.userEmail ? window.userEmail.split('@')[0] : 'Usuário Logado');
     
     document.getElementById('profile-name-input').value = savedName;
     document.getElementById('profile-admin-pwd').value = '';
+    const photoFilename = document.getElementById('profile-photo-filename');
+    if (photoFilename) photoFilename.innerText = localStorage.getItem('sys_profile_photo') ? 'Foto atual carregada' : 'Nenhum arquivo...';
     
     document.getElementById('profile-modal').classList.remove('hidden');
 };
@@ -2040,15 +2079,43 @@ window.closeNotificationsModal = () => {
     document.getElementById('notifications-modal').classList.add('hidden');
 };
 
+window.openLogoutModal = () => {
+    const popover = document.getElementById('account-popover');
+    if (popover) popover.classList.remove('popover-active');
+    const modal = document.getElementById('logout-confirm-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.closeLogoutModal = () => {
+    const modal = document.getElementById('logout-confirm-modal');
+    if (modal) modal.classList.add('hidden');
+};
+
 window.logout = async () => {
+    const btnConfirm = document.getElementById('btn-confirm-logout');
+    if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.innerText = "Saindo...";
+    }
     window.showToast("Saindo da conta...", "info");
     try {
+        localStorage.removeItem('sys_current_user_id');
+        localStorage.removeItem('sys_profile_name');
+        localStorage.removeItem('sys_profile_photo');
+        localStorage.removeItem('sys_admin_pwd');
         const { getAuth, signOut } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
         const auth = getAuth();
         await signOut(auth);
         window.location.replace("login.html");
     } catch(e) {
         console.error(e);
+        localStorage.removeItem('sys_current_user_id');
+        localStorage.removeItem('sys_profile_name');
+        localStorage.removeItem('sys_profile_photo');
+        localStorage.removeItem('sys_admin_pwd');
         window.location.replace("login.html");
     }
 };
@@ -2058,12 +2125,13 @@ window.saveProfile = async (e) => {
     if(!userId) return window.showToast("Carregando banco de dados, aguarde...", "error");
 
     const adminPwd = document.getElementById('profile-admin-pwd').value;
+    const currentAdminPwd = localStorage.getItem('sys_admin_pwd') || 'admin';
     
-    if (adminPwd !== localStorage.getItem('sys_admin_pwd')) {
-        return window.showToast("Senha Admin incorreta!", "error");
+    if (adminPwd !== currentAdminPwd) {
+        return window.showToast("Senha Admin incorreta! (Padrão: admin)", "error");
     }
     
-    const newName = document.getElementById('profile-name-input').value;
+    const newName = document.getElementById('profile-name-input').value.trim();
     const photoFile = document.getElementById('profile-photo').files[0];
     const btn = e.target.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
@@ -2078,6 +2146,15 @@ window.saveProfile = async (e) => {
             
             await setDoc(doc(db, ...window.getDbPathArray('usuarios'), userId), userData, { merge: true });
             
+            try {
+                const { updateProfile } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+                if (auth.currentUser) {
+                    await updateProfile(auth.currentUser, { displayName: name });
+                }
+            } catch (authErr) {
+                console.warn("Aviso ao salvar displayName no auth:", authErr);
+            }
+
             localStorage.setItem('sys_profile_name', name);
             if (photoBase64) localStorage.setItem('sys_profile_photo', photoBase64);
             updateProfileUI();
@@ -2101,18 +2178,23 @@ window.saveProfile = async (e) => {
     }
 };
 
-function updateProfileUI() {
-    const savedName = localStorage.getItem('sys_profile_name') || 'Usuário Logado';
-    const savedPhoto = localStorage.getItem('sys_profile_photo');
+function updateProfileUI(nameOverride, photoOverride) {
+    const savedName = nameOverride !== undefined ? nameOverride : (localStorage.getItem('sys_profile_name') || (window.userEmail ? window.userEmail.split('@')[0] : 'Usuário Logado'));
+    const savedPhoto = photoOverride !== undefined ? photoOverride : localStorage.getItem('sys_profile_photo');
     
     const nameDisplay = document.getElementById('account-name-display');
     if (nameDisplay) nameDisplay.innerText = savedName;
+
+    const emailDisplay = document.getElementById('account-email-display');
+    if (emailDisplay && window.userEmail) emailDisplay.innerText = window.userEmail;
     
     const imgDisplay = document.getElementById('account-avatar-img');
-    if (imgDisplay && savedPhoto) {
-        imgDisplay.src = savedPhoto;
-    } else if (imgDisplay) {
-        imgDisplay.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(savedName)}&background=random`;
+    if (imgDisplay) {
+        if (savedPhoto) {
+            imgDisplay.src = savedPhoto;
+        } else {
+            imgDisplay.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(savedName)}&background=random`;
+        }
     }
 }
 
@@ -2274,4 +2356,217 @@ window.executeDeleteProductAuth = () => {
 window.executeBulkDeleteAuth = () => {
     window.closeBulkDeleteConfirm();
     window.requestAuth('bulk-delete-final');
+};
+
+// ==========================================================================
+// TUTORIAL DE BOAS-VINDAS / ONBOARDING TOUR
+// ==========================================================================
+
+const tourSteps = [
+    {
+        tab: 'home',
+        badge: 'Passo 1 de 5 • Início',
+        title: 'Bem-vindo ao Axis PDV! 🚀',
+        description: 'Este é o seu painel de controle principal. Aqui você tem uma visão completa da saúde financeira e do desempenho da sua loja em tempo real, sem complicações.',
+        example: 'No final do dia, abra a tela Início para conferir o faturamento bruto do dia, o ticket médio e saber quais produtos foram os campeões de vendas do mês!',
+        highlights: [
+            'Faturamento total e ticket médio calculados automaticamente.',
+            'Ranking inteligente dos produtos mais vendidos da sua loja.',
+            'Seletor de meses para acompanhar sua evolução ao longo do ano.'
+        ],
+        btnNext: 'Próximo: Gestão de Estoque ➔'
+    },
+    {
+        tab: 'consult',
+        badge: 'Passo 2 de 5 • Estoque',
+        title: 'Gestão de Estoque & Catálogo 📦',
+        description: 'Organize todos os produtos da sua loja com fotos, preços de custo, margem de lucro, código de barras e quantidades em estoque.',
+        example: 'Chegou mercadoria nova? Clique no botão "+ Novo Item" no topo, informe o nome, o valor de venda e tire uma foto pelo celular ou computador. O produto já fica pronto para ser vendido no caixa!',
+        highlights: [
+            'Cadastro completo com foto comprimida na nuvem e código de barras.',
+            'Ajuste rápido de estoque e preço direto na tabela sem complicação.',
+            'Alertas visuais em vermelho para itens com estoque baixo ou zerado.',
+            'Exportação e backup de todo o inventário em formato CSV ou planilha.'
+        ],
+        btnNext: 'Próximo: Frente de Caixa ➔'
+    },
+    {
+        tab: 'sales',
+        badge: 'Passo 3 de 5 • Caixa & Vendas',
+        title: 'Frente de Caixa Rápido (PDV) 🛒',
+        description: 'A tela mais utilizada na sua rotina. Desenvolvida para ser veloz, intuitiva e evitar filas no balcão, funcionando tanto no teclado quanto no touch.',
+        example: 'Um cliente chega ao caixa com 3 peças: você digita os nomes ou bipe os códigos de barras, escolhe "Pix" ou "Cartão de Crédito", aplica um desconto se desejar e finaliza a venda em poucos segundos!',
+        highlights: [
+            'Busca instantânea por nome ou bipe com leitor de código de barras.',
+            'Múltiplas formas de pagamento: Dinheiro, Pix, Débito, Crédito e Fiado.',
+            'Cálculo automático de troco e abatimento instantâneo no estoque.',
+            'Emissão automática de comprovante/recibo para impressão térmica ou PDF.'
+        ],
+        btnNext: 'Próximo: Histórico de Vendas ➔'
+    },
+    {
+        tab: 'history',
+        badge: 'Passo 4 de 5 • Histórico & Finanças',
+        title: 'Histórico Completo & Relatórios 📅',
+        description: 'Todas as vendas finalizadas ficam salvas na nuvem com data, hora, itens e forma de pagamento. Você tem controle total sobre o fluxo financeiro da loja.',
+        example: 'Precisa conferir quanto entrou no Pix hoje ou um cliente pediu para reimprimir o comprovante da semana passada? Localize a venda pelo filtro de data e veja todos os detalhes num clique.',
+        highlights: [
+            'Filtros práticos: vendas de hoje, da semana, do mês ou período customizado.',
+            'Reimpressão rápida de comprovante de qualquer venda passada.',
+            'Estorno seguro protegido por senha de administrador com devolução ao estoque.',
+            'Exportação de relatórios profissionais em Excel (XLSX) e PDF.'
+        ],
+        btnNext: 'Próximo: Ajustes da Loja ➔'
+    },
+    {
+        tab: 'home',
+        badge: 'Passo 5 de 5 • Ajustes & Perfil',
+        title: 'Personalização & Segurança da Loja ⚙️',
+        description: 'Deixe o sistema com a cara do seu negócio! No menu do usuário (canto inferior esquerdo), você configura os dados da loja, taxas e segurança.',
+        example: 'Antes de começar a vender pra valer, clique no seu nome no canto inferior, acesse "Ajustes", insira o nome da sua loja e as taxas da sua maquininha de cartão para que o lucro seja calculado perfeitamente!',
+        highlights: [
+            'Nome da empresa, CNPJ/CPF e endereço impressos no cabeçalho do recibo.',
+            'Configuração de taxas de débito e crédito para controle do lucro real.',
+            'Senha de Administrador para proteger ações críticas do sistema.',
+            'Backup com 1 clique para você nunca perder nenhum dado da sua loja.'
+        ],
+        btnNext: 'Concluir Tutorial 🎉'
+    }
+];
+
+let currentTourStep = 0;
+
+function renderTourStep(index) {
+    currentTourStep = index;
+    const step = tourSteps[index];
+    if (!step) return;
+
+    // Alterna a aba de fundo para demonstrar a tela real
+    if (step.tab && typeof window.switchTab === 'function') {
+        window.switchTab(step.tab);
+    }
+
+    const badgeTextEl = document.getElementById('tour-badge-text');
+    if (badgeTextEl) badgeTextEl.innerText = step.badge;
+
+    const counterEl = document.getElementById('tour-step-counter');
+    if (counterEl) counterEl.innerText = `${index + 1} de ${tourSteps.length}`;
+
+    const titleEl = document.getElementById('tour-title');
+    if (titleEl) titleEl.innerText = step.title;
+
+    const descEl = document.getElementById('tour-description');
+    if (descEl) descEl.innerText = step.description;
+
+    const exampleEl = document.getElementById('tour-example-text');
+    if (exampleEl) exampleEl.innerText = step.example;
+
+    const highlightsEl = document.getElementById('tour-highlights');
+    if (highlightsEl) {
+        highlightsEl.innerHTML = step.highlights.map(h => `
+            <li class="tour-highlight-item">
+                <i data-lucide="check-circle-2" class="tour-highlight-icon"></i>
+                <span>${h}</span>
+            </li>
+        `).join('');
+    }
+
+    const progressBar = document.getElementById('tour-progress-bar');
+    if (progressBar) {
+        const pct = ((index + 1) / tourSteps.length) * 100;
+        progressBar.style.width = `${pct}%`;
+    }
+
+    const btnPrev = document.getElementById('tour-btn-prev');
+    if (btnPrev) {
+        if (index === 0) btnPrev.classList.add('hidden');
+        else btnPrev.classList.remove('hidden');
+    }
+
+    const btnNext = document.getElementById('tour-btn-next');
+    if (btnNext) {
+        btnNext.innerText = step.btnNext || (index === tourSteps.length - 1 ? 'Concluir Tutorial 🎉' : 'Próximo ➔');
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.startOnboardingTour = () => {
+    const modal = document.getElementById('tour-modal');
+    if (modal) modal.classList.remove('hidden');
+    renderTourStep(0);
+};
+
+window.prevTourStep = () => {
+    if (currentTourStep > 0) {
+        renderTourStep(currentTourStep - 1);
+    }
+};
+
+window.nextTourStep = () => {
+    if (currentTourStep < tourSteps.length - 1) {
+        renderTourStep(currentTourStep + 1);
+    } else {
+        window.finishOnboardingTour(false);
+    }
+};
+
+window.promptSkipOnboarding = () => {
+    const skipModal = document.getElementById('tour-skip-confirm-modal');
+    if (skipModal) {
+        skipModal.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+};
+
+window.cancelSkipTour = () => {
+    const skipModal = document.getElementById('tour-skip-confirm-modal');
+    if (skipModal) skipModal.classList.add('hidden');
+};
+
+window.finishOnboardingTour = async (skipped = false) => {
+    const targetUserId = userId || localStorage.getItem('sys_current_user_id');
+    if (targetUserId) {
+        localStorage.setItem(`sys_tour_completed_${targetUserId}`, 'true');
+    }
+
+    const modal = document.getElementById('tour-modal');
+    if (modal) modal.classList.add('hidden');
+
+    const skipModal = document.getElementById('tour-skip-confirm-modal');
+    if (skipModal) skipModal.classList.add('hidden');
+
+    if (typeof window.switchTab === 'function') {
+        window.switchTab('home');
+    }
+
+    if (targetUserId) {
+        try {
+            await setDoc(doc(db, ...window.getDbPathArray('usuarios'), targetUserId), {
+                tourCompleted: true,
+                tourCompletedAt: new Date().toISOString()
+            }, { merge: true });
+        } catch (e) {
+            console.warn("Aviso ao salvar status do tutorial na nuvem:", e);
+        }
+    }
+
+    if (skipped) {
+        window.showToast("Tutorial ignorado. Bom trabalho com o sistema!", "info");
+    } else {
+        window.showToast("Tutorial concluído com sucesso! Boas vendas!", "success");
+    }
+};
+
+window.checkAndTriggerOnboarding = (uid) => {
+    if (!uid) return;
+    const tourDone = localStorage.getItem(`sys_tour_completed_${uid}`);
+    if (!tourDone) {
+        setTimeout(() => {
+            // Verifica novamente caso tenha sido atualizado assincronamente pelo docSnap
+            if (!localStorage.getItem(`sys_tour_completed_${uid}`)) {
+                window.startOnboardingTour();
+            }
+        }, 1200);
+    }
 };

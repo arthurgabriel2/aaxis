@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Axis PDV</title>
+    <!-- Roteamento inteligente de dispositivo (Mobile vs Desktop) -->
+    <script src="../assets/scripts/device-router.js"></script>
+    <script>
+        window.routeDevice('desktop-login');
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -159,6 +164,12 @@
             <span id="switch-text">Não tem uma conta?</span>
             <button type="button" id="btn-switch">Criar conta</button>
         </div>
+
+        <div style="margin-top: 1.25rem; text-align: center; border-top: 1px solid var(--border); padding-top: 0.85rem;">
+            <a href="../mobile/login.html" onclick="window.setDevicePreference('mobile');" style="color: var(--muted-foreground); text-decoration: none; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s ease;">
+                <i data-lucide="smartphone" style="width: 15px; height: 15px;"></i> Acessar versão Celular / Mobile ➔
+            </a>
+        </div>
     </div>
 
     <div class="auth-container card hidden" id="verify-container">
@@ -169,11 +180,12 @@
         </div>
         <button type="button" class="btn-auth" id="btn-check-verify">Já confirmei, entrar</button>
         <button type="button" class="btn-auth" id="btn-resend-verify" style="background: transparent; color: var(--foreground); border: 1px solid var(--border); margin-top: 0.5rem;">Reenviar link</button>
+        <button type="button" class="btn-auth" id="btn-back-login" style="background: transparent; color: var(--muted-foreground); border: none; margin-top: 0.5rem; font-size: 0.85rem;">Voltar ao login</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -201,6 +213,20 @@
         const btnSwitch = document.getElementById('btn-switch');
         const switchText = document.getElementById('switch-text');
         const nameGroup = document.getElementById('name-group');
+
+        function clearUserCache(newUid) {
+            const prevUid = localStorage.getItem('sys_current_user_id');
+            if (prevUid !== newUid) {
+                localStorage.removeItem('sys_profile_name');
+                localStorage.removeItem('sys_profile_photo');
+                localStorage.removeItem('sys_admin_pwd');
+            }
+            if (newUid) {
+                localStorage.setItem('sys_current_user_id', newUid);
+            } else {
+                localStorage.removeItem('sys_current_user_id');
+            }
+        }
 
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -272,23 +298,55 @@
                     if (!cred.user.emailVerified && cred.user.email !== 'jumagazinestore@gmail.com') {
                         document.querySelector('.auth-container').classList.add('hidden');
                         document.getElementById('verify-container').classList.remove('hidden');
-                        await sendEmailVerification(cred.user);
+                        try {
+                            await sendEmailVerification(cred.user);
+                        } catch(e) {}
                         showToast("Verifique seu email para prosseguir.", "info");
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerText = "Entrar";
                         return;
                     }
+                    clearUserCache(cred.user.uid);
                     showToast("Login realizado!", "success");
                     setTimeout(() => window.location.replace("app.html"), 1000);
                 } else {
                     const cred = await createUserWithEmailAndPassword(auth, email, pass);
                     const userId = cred.user.uid;
-                    const userDoc = doc(db, 'artifacts', pdvAppId, 'users', userId, 'data', 'usuarios', userId);
-                    await setDoc(userDoc, {
-                        name: name,
-                        email: email,
-                        createdAt: new Date().toISOString()
-                    });
+
+                    // Atualiza o displayName no próprio Firebase Auth
+                    if (name) {
+                        try {
+                            await updateProfile(cred.user, { displayName: name });
+                        } catch (profileErr) {
+                            console.warn("Aviso ao definir displayName no auth:", profileErr);
+                        }
+                    }
+
+                    // Salva os dados do usuário no Firestore (caminho com 6 segmentos válidos)
+                    try {
+                        const userPath = email === 'jumagazinestore@gmail.com'
+                            ? ['artifacts', pdvAppId, 'public', 'data', 'usuarios', userId]
+                            : ['artifacts', pdvAppId, 'users', userId, 'usuarios', userId];
+                        const userDoc = doc(db, ...userPath);
+                        await setDoc(userDoc, {
+                            name: name || email.split('@')[0],
+                            email: email,
+                            createdAt: new Date().toISOString(),
+                            tourCompleted: false
+                        }, { merge: true });
+                    } catch (dbErr) {
+                        console.warn("Aviso ao salvar usuário no Firestore:", dbErr);
+                    }
                     
-                    await sendEmailVerification(cred.user);
+                    try {
+                        await sendEmailVerification(cred.user);
+                    } catch (emailErr) {
+                        console.warn("Aviso ao enviar verificação de email:", emailErr);
+                    }
+
+                    clearUserCache(userId);
+                    if (name) localStorage.setItem('sys_profile_name', name);
+
                     document.querySelector('.auth-container').classList.add('hidden');
                     document.getElementById('verify-container').classList.remove('hidden');
                     showToast("Conta criada! Verifique seu e-mail.", "success");
@@ -296,11 +354,17 @@
             } catch (err) {
                 console.error(err);
                 if(err.code === 'auth/email-already-in-use') {
-                    showToast("Email já cadastrado.", "error");
+                    showToast("Este e-mail já está cadastrado.", "error");
+                } else if(err.code === 'auth/weak-password') {
+                    showToast("A senha deve ter no mínimo 6 caracteres.", "error");
+                } else if(err.code === 'auth/invalid-email') {
+                    showToast("E-mail em formato inválido.", "error");
                 } else if(err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
                     showToast("Email ou senha inválidos.", "error");
+                } else if(err.code === 'auth/too-many-requests') {
+                    showToast("Muitas tentativas. Aguarde um instante.", "error");
                 } else {
-                    showToast("Erro de autenticação.", "error");
+                    showToast(err.message || "Erro de autenticação.", "error");
                 }
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = isLogin ? "Entrar" : "Criar Conta";
@@ -312,11 +376,16 @@
             if (user) {
                 await user.reload();
                 if (user.emailVerified) {
+                    clearUserCache(user.uid);
                     showToast("Email verificado com sucesso!", "success");
                     setTimeout(() => window.location.replace("app.html"), 1000);
                 } else {
                     showToast("O email ainda não foi confirmado. Verifique também sua caixa de SPAM.", "error");
                 }
+            } else {
+                document.getElementById('verify-container').classList.add('hidden');
+                document.querySelector('.auth-container').classList.remove('hidden');
+                showToast("Faça login com seu email e senha.", "info");
             }
         });
 
@@ -330,6 +399,11 @@
                     showToast("Aguarde um momento antes de pedir novamente.", "error");
                 }
             }
+        });
+
+        document.getElementById('btn-back-login').addEventListener('click', () => {
+            document.getElementById('verify-container').classList.add('hidden');
+            document.querySelector('.auth-container').classList.remove('hidden');
         });
     </script>
 </body>

@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axis - O Sistema Definitivo</title>
+    <!-- Roteamento inteligente de dispositivo (Mobile vs Desktop) -->
+    <script src="assets/scripts/device-router.js"></script>
+    <script>
+        window.routeDevice('landing');
+    </script>
     <!-- Favicon monocromático (Estrelas) -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -388,7 +393,12 @@
             <a href="#features">Funcionalidades</a>
             <a href="#about">Sobre Nós</a>
         </nav>
-        <a href="pages/app.html" class="btn-login">Acessar Sistema</a>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <a href="mobile/login.html" class="btn-login" style="background: transparent; color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.2);" onclick="window.setDevicePreference('mobile');">
+                <i data-lucide="smartphone" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 4px;"></i> Versão Mobile
+            </a>
+            <a href="pages/app.html" class="btn-login" onclick="window.setDevicePreference('desktop');">Acessar Sistema</a>
+        </div>
     </header>
 
     <main>
@@ -402,9 +412,13 @@
             <p>Gerencie vendas, controle seu estoque em tempo real, defina metas e obtenha insights valiosos em uma interface incrivelmente rápida e responsiva.</p>
             
             <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                <a href="pages/app.html" class="btn-primary">
+                <a href="pages/app.html" class="btn-primary" onclick="window.setDevicePreference('desktop');">
                     Começar Gratuitamente
                     <i data-lucide="arrow-right"></i>
+                </a>
+                <a href="mobile/login.html" class="btn-primary" style="background: rgba(255, 255, 255, 0.08); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); box-shadow: none;" onclick="window.setDevicePreference('mobile');">
+                    <i data-lucide="smartphone"></i>
+                    Versão Mobile (Liquid Glass)
                 </a>
                 <a href="downloads/Axis Setup.exe" class="btn-primary" style="background: transparent; color: var(--text-main); border: 1px solid var(--border); box-shadow: none;" download>
                     <i data-lucide="download"></i>

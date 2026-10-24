@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>Axis Mobile</title>
+    <!-- Roteamento inteligente de dispositivo (Mobile vs Desktop) -->
+    <script src="../assets/scripts/device-router.js"></script>
+    <script>
+        window.routeDevice('mobile-app');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/styles/mobile.css">
+    <script type="module" src="assets/scripts/mobile-app.js?v=1"></script>
+</head>
+<body>
+    <div id="mobile-toast-container" class="mobile-toast-container"></div>
+
+    <div class="mobile-app-container">
+        <!-- TOP LIQUID GLASS HEADER -->
+        <header class="mobile-header">
+            <div class="header-brand">
+                <div class="brand-icon">
+                    <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                    <h1 class="brand-title">AXIS</h1>
+                    <span class="brand-subtitle" id="header-store-name">Carregando loja...</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" class="header-btn" onclick="window.openScannerModal()" title="Escanear Código de Barras">
+                    <i data-lucide="scan-barcode" style="width: 20px; height: 20px;"></i>
+                </button>
+                <button type="button" class="header-btn avatar-btn" onclick="window.openAccountSheet()" title="Minha Conta e Ajustes">
+                    <img id="header-avatar-img" src="https://ui-avatars.com/api/?name=User&background=random" alt="Perfil">
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEWPORT -->
+        <main class="mobile-content-viewport">
+            
+            <!-- VIEW: INÍCIO (DASHBOARD) -->
+            <section id="mobile-view-home" class="mobile-view active">
+                <!-- Seletor de Período -->
+                <div class="glass-card" style="padding: 12px 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="calendar" style="width: 16px; height: 16px;"></i> Mês de Análise
+                        </span>
+                        <select id="dash-month-select" class="input-mobile" style="height: 36px; padding: 0 10px; font-size: 0.85rem; width: auto; min-width: 140px;" onchange="window.renderMobileDashboard()">
+                        </select>
+                    </div>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-highlight">
+                        <span class="kpi-label"><i data-lucide="dollar-sign"></i> Faturamento</span>
+                        <span class="kpi-value" id="kpi-revenue">R$ 0,00</span>
+                        <span class="kpi-sub" id="kpi-revenue-sub">Receita bruta</span>
+                    </div>
+
+                    <div class="kpi-card">
+                        <span class="kpi-label"><i data-lucide="shopping-bag"></i> Total Vendas</span>
+                        <span class="kpi-value" id="kpi-sales-count">0</span>
+                        <span class="kpi-sub">pedidos fechados</span>
+                    </div>
+
+                    <div class="kpi-card">
+                        <span class="kpi-label"><i data-lucide="trending-up"></i> Ticket Médio</span>
+                        <span class="kpi-value" id="kpi-ticket-avg">R$ 0,00</span>
+                        <span class="kpi-sub">por cliente</span>
+                    </div>
+
+                    <div class="kpi-card">
+                        <span class="kpi-label"><i data-lucide="pie-chart"></i> Lucro Est.</span>
+                        <span class="kpi-value" id="kpi-profit">R$ 0,00</span>
+                        <span class="kpi-sub">após custos e taxas</span>
+                    </div>
+                </div>
+
+                <!-- Ranking Top Produtos -->
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <h2 class="glass-card-title"><i data-lucide="trophy"></i> Produtos Mais Vendidos</h2>
+                        <span style="font-size: 0.75rem; color: var(--text-tertiary);">No mês</span>
+                    </div>
+                    <div id="dash-top-products" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="text-align: center; color: var(--text-tertiary); padding: 1.5rem 0; font-size: 0.85rem;">
+                            Carregando estatísticas...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendas Recentes de Hoje -->
+                <div class="glass-card">
+                    <div class="glass-card-header">
+                        <h2 class="glass-card-title"><i data-lucide="clock"></i> Últimas Vendas de Hoje</h2>
+                        <button type="button" class="btn-glass btn-glass-sm" style="width: auto;" onclick="window.switchMobileTab('history')">Ver todas</button>
+                    </div>
+                    <div id="dash-recent-sales" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="text-align: center; color: var(--text-tertiary); padding: 1rem 0; font-size: 0.85rem;">
+                            Nenhuma venda registrada hoje.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: CAIXA (VENDAS DO DIA MOBILE) -->
+            <section id="mobile-view-sales" class="mobile-view">
+                <!-- Header do Caixa com Data e Total de Hoje -->
+                <div class="glass-card" style="padding: 16px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
+                                <i data-lucide="calendar" style="width: 14px; height: 14px;"></i> Caixa do Dia
+                            </span>
+                            <h2 id="mob-sales-date-display" style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-top: 2px;">Hoje</h2>
+                        </div>
+                        <button type="button" class="btn-glass btn-glass-primary" style="width: auto; padding: 8px 14px; font-size: 0.82rem; gap: 6px;" onclick="window.openMobileSaleModal()">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Nova Venda
+                        </button>
+                    </div>
+
+                    <!-- Mini KPI do Dia -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 12px; border-top: 1px solid var(--glass-card-border);">
+                        <div>
+                            <span style="font-size: 0.72rem; color: var(--text-tertiary); display: block;">Faturamento de Hoje</span>
+                            <span id="mob-today-total" style="font-size: 1.25rem; font-weight: 800; color: #10b981;">R$ 0,00</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.72rem; color: var(--text-tertiary); display: block;">Vendas Fechadas</span>
+                            <span id="mob-today-count" style="font-size: 1.25rem; font-weight: 800; color: #ffffff;">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Barra de Busca nas vendas de hoje -->
+                <div class="mobile-search-bar" style="margin-bottom: 12px;">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="mob-sales-search" class="mobile-search-input" placeholder="Buscar nas vendas de hoje..." oninput="window.filterMobileTodaySales(this.value)">
+                </div>
+
+                <!-- Lista de Vendas do Dia -->
+                <div id="mob-today-sales-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align: center; color: var(--text-tertiary); padding: 3rem 1rem;">
+                        Carregando vendas do dia...
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: ESTOQUE (PRODUTOS) -->
+            <section id="mobile-view-consult" class="mobile-view">
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <div class="mobile-search-bar" style="flex: 1; margin-bottom: 0;">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="stock-search-input" class="mobile-search-input" placeholder="Buscar por nome ou código..." oninput="window.renderMobileStock(this.value)">
+                    </div>
+                    <button type="button" class="btn-glass btn-glass-primary" style="width: auto; padding: 0 14px;" onclick="window.openNewProductSheet()">
+                        <i data-lucide="plus"></i> Novo
+                    </button>
+                </div>
+
+                <!-- Stock Segmented Filter -->
+                <div class="segmented-control">
+                    <button type="button" class="segment-btn active" onclick="window.setStockFilter('all', this)">Todos</button>
+                    <button type="button" class="segment-btn" onclick="window.setStockFilter('low', this)">Estoque Baixo</button>
+                    <button type="button" class="segment-btn" onclick="window.setStockFilter('zero', this)">Zerados</button>
+                </div>
+
+                <div id="stock-list-container" class="product-mobile-grid">
+                    <div style="text-align: center; color: var(--text-tertiary); padding: 3rem 1rem;">
+                        Carregando lista de produtos...
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: HISTÓRICO DE VENDAS -->
+            <section id="mobile-view-history" class="mobile-view">
+                <div class="mobile-search-bar">
+                    <i data-lucide="search"></i>
+                    <input type="text" id="history-search-input" class="mobile-search-input" placeholder="Buscar por cliente, ID ou pagamento..." oninput="window.renderMobileHistory(this.value)">
+                </div>
+
+                <!-- Filtro por Período Segmented -->
+                <div class="segmented-control">
+                    <button type="button" class="segment-btn active" onclick="window.setHistoryPeriod('today', this)">Hoje</button>
+                    <button type="button" class="segment-btn" onclick="window.setHistoryPeriod('7days', this)">7 Dias</button>
+                    <button type="button" class="segment-btn" onclick="window.setHistoryPeriod('month', this)">Este Mês</button>
+                    <button type="button" class="segment-btn" onclick="window.setHistoryPeriod('all', this)">Tudo</button>
+                </div>
+
+                <!-- Lista de Vendas -->
+                <div id="history-list-container">
+                    <div style="text-align: center; color: var(--text-tertiary); padding: 3rem 1rem;">
+                        Carregando histórico de vendas...
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- FLOATING ACTION BUTTON (+) PARA NOVA VENDA -->
+        <button type="button" id="mob-btn-fab-new-sale" class="mobile-fab-pill" onclick="window.openMobileSaleModal()" title="Cadastrar Nova Venda">
+            <div class="fab-plus-circle">
+                <i data-lucide="plus" style="width: 20px; height: 20px;"></i>
+            </div>
+            <span>Nova Venda</span>
+            <span id="mob-fab-cart-badge" class="fab-badge hidden">0</span>
+        </button>
+
+        <!-- BOTTOM DOCK NAVIGATION -->
+        <nav class="mobile-nav-dock">
+            <button type="button" class="dock-item active" id="dock-home" onclick="window.switchMobileTab('home')">
+                <i data-lucide="house"></i>
+                <span>Início</span>
+            </button>
+            <button type="button" class="dock-item" id="dock-sales" onclick="window.switchMobileTab('sales')">
+                <i data-lucide="shopping-cart"></i>
+                <span>Caixa</span>
+                <span id="dock-cart-badge" class="dock-badge hidden"></span>
+            </button>
+            <button type="button" class="dock-item" id="dock-consult" onclick="window.switchMobileTab('consult')">
+                <i data-lucide="book-search"></i>
+                <span>Estoque</span>
+            </button>
+            <button type="button" class="dock-item" id="dock-history" onclick="window.switchMobileTab('history')">
+                <i data-lucide="calendar"></i>
+                <span>Histórico</span>
+            </button>
+            <button type="button" class="dock-item" id="dock-account" onclick="window.openAccountSheet()">
+                <i data-lucide="settings"></i>
+                <span>Ajustes</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ==========================================================================
+         BOTTOM SHEETS & MODALS (iOS LIQUID GLASS SHEETS)
+         ========================================================================== -->
+
+    <!-- SHEET: FORMULÁRIO DE VENDAS COMPLETO (PDV MOBILE) -->
+    <div id="mobile-sale-modal" class="mobile-sheet-overlay hidden" onclick="window.closeMobileSaleModalOnOverlay(event)">
+        <div class="mobile-sheet" style="max-height: 92vh;" onclick="event.stopPropagation()">
+            <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <h2 class="sheet-title"><i data-lucide="shopping-bag"></i> Nova Venda</h2>
+                <button type="button" class="sheet-close-btn" onclick="window.closeMobileSaleModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="sheet-body" style="padding-bottom: 24px;">
+                
+                <!-- CARD: ADICIONAR ITEM -->
+                <div class="glass-card" style="padding: 14px; margin-bottom: 14px;">
+                    <h3 style="font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i> Adicionar Item ao Pedido
+                    </h3>
+                    
+                    <form id="mob-add-item-form" onsubmit="window.handleMobileAddItemSubmit(event)">
+                        <!-- Nome do Produto com Autocomplete e Bipe de Código -->
+                        <div class="form-group-mobile" style="position: relative;">
+                            <label>Produto *</label>
+                            <div style="display: flex; gap: 6px;">
+                                <input type="text" id="mob-pdv-product" class="input-mobile" placeholder="Digite o nome do produto..." autocomplete="off" required oninput="window.handleMobileProductAutocomplete()" onfocus="window.handleMobileProductAutocomplete()">
+                                <button type="button" class="btn-glass" style="width: auto; padding: 0 12px;" onclick="window.openScannerModal('mob-pdv-product')" title="Escanear Código de Barras">
+                                    <i data-lucide="scan-barcode" style="width: 18px; height: 18px;"></i>
+                                </button>
+                            </div>
+                            <!-- Autocomplete Dropdown List -->
+                            <div id="mob-pdv-autocomplete-list" class="mobile-autocomplete-dropdown hidden"></div>
+                        </div>
+
+                        <!-- Quantidade com Steppers e Preço Unitário -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div class="form-group-mobile" style="margin-bottom: 0;">
+                                <label>Quantidade *</label>
+                                <div class="stepper-group">
+                                    <button type="button" class="stepper-btn" onclick="window.adjustMobileItemQtd(-1)">-</button>
+                                    <input type="number" id="mob-pdv-qtd" class="input-mobile" value="1" min="1" required style="text-align: center; padding: 0;" oninput="window.calcMobileItemDiscount('sync')">
+                                    <button type="button" class="stepper-btn" onclick="window.adjustMobileItemQtd(1)">+</button>
+                                </div>
+                            </div>
+                            <div class="form-group-mobile" style="margin-bottom: 0;">
+                                <label>Preço Unitário (R$) *</label>
+                                <input type="number" step="0.01" min="0" id="mob-pdv-price" class="input-mobile" placeholder="0,00" required oninput="window.calcMobileItemDiscount('sync')">
+                            </div>
+                        </div>
+
+                        <!-- Descontos (% e R$) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                            <div class="form-group-mobile" style="margin-bottom: 0;">
+                                <label>Desconto (%)</label>
+                                <input type="number" step="0.01" min="0" id="mob-pdv-disc-pct" class="input-mobile" placeholder="0%" oninput="window.calcMobileItemDiscount('pct')">
+                            </div>
+                            <div class="form-group-mobile" style="margin-bottom: 0;">
+                                <label>Desconto (R$)</label>
+                                <input type="number" step="0.01" min="0" id="mob-pdv-disc-val" class="input-mobile" placeholder="0,00" oninput="window.calcMobileItemDiscount('val')">
+                            </div>
+                        </div>
+
+                        <!-- Total do Item Calculado -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px;">
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">Total deste item:</span>
+                            <span id="mob-item-subtotal-display" style="font-size: 0.95rem; font-weight: 700; color: #ffffff;">R$ 0,00</span>
+                        </div>
+
+                        <!-- Forma de Pagamento do Item -->
+                        <div class="form-group-mobile" style="margin-bottom: 10px;">
+                            <label>Forma de Pagamento</label>
+                            <select id="mob-pdv-payment" class="input-mobile" onchange="window.handleMobileItemPaymentChange()">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Pix">Pix Instantâneo</option>
+                                <option value="Débito">Cartão de Débito</option>
+                                <option value="Crédito">Cartão de Crédito</option>
+                                <option value="Fiado">Fiado / A Prazo</option>
+                                <option value="Multiplo">Múltiplo (Dividir Pagamento)</option>
+                            </select>
+                        </div>
+
+                        <!-- Opções de Crédito (Parcelamento) -->
+                        <div id="mob-pdv-credit-options" class="form-group-mobile hidden">
+                            <label>Parcelamento</label>
+                            <select id="mob-pdv-installments" class="input-mobile">
+                                <option value="1">1x à vista</option>
+                                <option value="2">2x parcelado</option>
+                                <option value="3">3x parcelado</option>
+                                <option value="4">4x parcelado</option>
+                                <option value="5">5x parcelado</option>
+                                <option value="6">6x parcelado</option>
+                                <option value="7">7x parcelado</option>
+                                <option value="8">8x parcelado</option>
+                                <option value="9">9x parcelado</option>
+                                <option value="10">10x parcelado</option>
+                                <option value="11">11x parcelado</option>
+                                <option value="12">12x parcelado</option>
+                            </select>
+                        </div>
+
+                        <!-- Opções de Dinheiro (Troco) -->
+                        <div id="mob-pdv-cash-options" class="form-group-mobile">
+                            <label>Valor Recebido em Dinheiro (R$)</label>
+                            <input type="number" step="0.01" id="mob-pdv-cash-given" class="input-mobile" placeholder="0,00" oninput="window.calcMobileItemCashChange()">
+                            <div id="mob-pdv-change-display" style="font-size: 0.85rem; font-weight: 600; color: #10b981; margin-top: 6px;"></div>
+                        </div>
+
+                        <!-- Opções de Fiado -->
+                        <div id="mob-pdv-fiado-options" class="glass-card hidden" style="padding: 12px; background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.2); margin-bottom: 12px;">
+                            <div class="form-group-mobile">
+                                <label>Nome do Cliente *</label>
+                                <input type="text" id="mob-pdv-fiado-name" class="input-mobile" placeholder="Ex: Maria Joana">
+                            </div>
+                            <div class="form-group-mobile">
+                                <label>Data de Vencimento</label>
+                                <input type="date" id="mob-pdv-fiado-due" class="input-mobile">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                <input type="checkbox" id="mob-pdv-fiado-has-entry" onchange="document.getElementById('mob-pdv-fiado-entry-box').classList.toggle('hidden', !this.checked)">
+                                <label for="mob-pdv-fiado-has-entry" style="margin: 0; font-size: 0.85rem; cursor: pointer;">Houve adiantamento / entrada?</label>
+                            </div>
+                            <div id="mob-pdv-fiado-entry-box" class="form-group-mobile hidden" style="margin-bottom: 0;">
+                                <label>Valor da Entrada (R$)</label>
+                                <input type="number" step="0.01" min="0" id="mob-pdv-fiado-entry-val" class="input-mobile" placeholder="0,00">
+                            </div>
+                        </div>
+
+                        <!-- Opção Múltiplo -->
+                        <div id="mob-pdv-multi-options" class="glass-card hidden" style="padding: 12px; background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.2); margin-bottom: 12px;">
+                            <label style="font-size: 0.82rem; font-weight: 600; display: block; margin-bottom: 8px;">Dividir Pagamento</label>
+                            <div id="mob-multi-rows-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                                <span id="mob-multi-remaining-label" style="font-size: 0.82rem; font-weight: 700; color: #ef4444;">Falta: R$ 0,00</span>
+                                <button type="button" class="btn-glass btn-glass-sm" style="width: auto;" onclick="window.addMobileMultiRow()">
+                                    <i data-lucide="plus"></i> Dividir
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Botão Adicionar Item -->
+                        <button type="submit" class="btn-glass btn-glass-primary" style="margin-top: 6px;">
+                            <i data-lucide="plus"></i> Inserir Item no Carrinho
+                        </button>
+                    </form>
+                </div>
+
+                <!-- CARD: ITENS DO CARRINHO ATUAL -->
+                <div class="glass-card" style="padding: 14px; margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h3 style="font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); margin: 0; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="shopping-cart" style="width: 15px; height: 15px;"></i> Itens do Pedido (<span id="mob-cart-items-count">0</span>)
+                        </h3>
+                        <button type="button" class="btn-glass btn-glass-sm btn-glass-destructive" style="width: auto; padding: 4px 10px; font-size: 0.75rem;" onclick="window.clearCurrentCart()">Limpar</button>
+                    </div>
+
+                    <div id="mob-cart-items-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="text-align: center; color: var(--text-tertiary); padding: 1.25rem 0; font-size: 0.85rem;">Nenhum item adicionado ainda.</p>
+                    </div>
+                </div>
+
+                <!-- RESUMO FINANCEIRO GERAL -->
+                <div class="glass-card" style="padding: 14px; margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-secondary);">
+                        <span>Subtotal:</span>
+                        <span id="mob-sale-subtotal">R$ 0,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; color: #ef4444;">
+                        <span>Descontos:</span>
+                        <span id="mob-sale-discount">R$ 0,00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: 800; color: #ffffff; padding-top: 8px; border-top: 1px solid var(--glass-card-border);">
+                        <span>Total Geral:</span>
+                        <span id="mob-sale-final-total" style="color: #10b981;">R$ 0,00</span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="sheet-footer">
+                <button type="button" class="btn-glass" style="width: auto; padding: 0 16px;" onclick="window.closeMobileSaleModal()">Cancelar</button>
+                <button type="button" id="btn-mob-finish-sale" class="btn-glass btn-glass-primary" onclick="window.finishMobileSaleFromModal()">
+                    Finalizar Venda ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHEET: COMPROVANTE / RECIBO DE VENDA -->
+    <div id="receipt-sheet" class="mobile-sheet-overlay hidden" onclick="window.closeReceiptSheetOnOverlay(event)">
+        <div class="mobile-sheet" onclick="event.stopPropagation()">
+            <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <h2 class="sheet-title"><i data-lucide="receipt"></i> Comprovante de Venda</h2>
+                <button type="button" class="sheet-close-btn" onclick="window.closeReceiptSheet()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="sheet-body">
+                <div id="receipt-printable-content" style="background: #ffffff; color: #000000; border-radius: var(--radius-md); padding: 20px 16px; font-family: monospace; font-size: 0.82rem; line-height: 1.4; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                    <!-- Conteúdo gerado dinamicamente -->
+                </div>
+            </div>
+            <div class="sheet-footer">
+                <button type="button" class="btn-glass" onclick="window.shareReceiptViaNative()"><i data-lucide="share-2"></i> Compartilhar</button>
+                <button type="button" class="btn-glass btn-glass-primary" onclick="window.printMobileReceipt()"><i data-lucide="printer"></i> Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHEET: CADASTRAR / EDITAR PRODUTO -->
+    <div id="product-sheet" class="mobile-sheet-overlay hidden" onclick="window.closeProductSheetOnOverlay(event)">
+        <div class="mobile-sheet" onclick="event.stopPropagation()">
+            <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <h2 class="sheet-title" id="product-sheet-title"><i data-lucide="package-plus"></i> Novo Produto</h2>
+                <button type="button" class="sheet-close-btn" onclick="window.closeProductSheet()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="sheet-body">
+                <form id="mobile-product-form" onsubmit="window.saveProduct(event)">
+                    <!-- Foto do Produto -->
+                    <div class="form-group-mobile" style="align-items: center; text-align: center;">
+                        <label>Foto do Produto</label>
+                        <div style="position: relative; width: 100px; height: 100px; border-radius: var(--radius-md); background: rgba(255,255,255,0.05); border: 1px dashed var(--glass-card-border-glow); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;" onclick="document.getElementById('mobile-prod-photo').click()">
+                            <img id="mobile-prod-photo-preview" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <div id="mobile-prod-photo-placeholder" style="color: var(--text-tertiary); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                <i data-lucide="camera" style="width: 26px; height: 26px;"></i>
+                                <span style="font-size: 0.65rem;">Tirar Foto</span>
+                            </div>
+                        </div>
+                        <input type="file" id="mobile-prod-photo" accept="image/*" capture="environment" class="hidden" onchange="window.handleProductPhotoPick(event)">
+                    </div>
+
+                    <div class="form-group-mobile">
+                        <label>Nome do Produto *</label>
+                        <input type="text" id="prod-name" class="input-mobile" required placeholder="Ex: Vestido Canelado Preto">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group-mobile">
+                            <label>Preço de Venda (R$) *</label>
+                            <input type="number" step="0.01" id="prod-price" class="input-mobile" required placeholder="0,00">
+                        </div>
+                        <div class="form-group-mobile">
+                            <label>Preço de Custo (R$)</label>
+                            <input type="number" step="0.01" id="prod-cost" class="input-mobile" placeholder="0,00">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group-mobile">
+                            <label>Estoque Atual *</label>
+                            <input type="number" id="prod-stock" class="input-mobile" required value="1">
+                        </div>
+                        <div class="form-group-mobile">
+                            <label>Estoque Mínimo</label>
+                            <input type="number" id="prod-min-stock" class="input-mobile" value="2">
+                        </div>
+                    </div>
+
+                    <div class="form-group-mobile">
+                        <label>Código de Barras (Opcional)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="prod-barcode" class="input-mobile" placeholder="7890000000000">
+                            <button type="button" class="btn-glass" style="width: auto; padding: 0 14px;" onclick="window.scanBarcodeForInput('prod-barcode')">
+                                <i data-lucide="scan"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-save-prod" class="btn-glass btn-glass-primary" style="margin-top: 10px;">
+                        Salvar na Nuvem
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHEET: CONTA, AJUSTES E CONFIGURAÇÕES DA LOJA -->
+    <div id="account-sheet" class="mobile-sheet-overlay hidden" onclick="window.closeAccountSheetOnOverlay(event)">
+        <div class="mobile-sheet" onclick="event.stopPropagation()">
+            <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <h2 class="sheet-title"><i data-lucide="user-cog"></i> Conta e Ajustes</h2>
+                <button type="button" class="sheet-close-btn" onclick="window.closeAccountSheet()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="sheet-body">
+                <!-- User Profile Card -->
+                <div class="glass-card" style="display: flex; align-items: center; gap: 14px; padding: 14px;">
+                    <div style="position: relative; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 1px solid var(--glass-card-border-glow); cursor: pointer;" onclick="document.getElementById('mobile-avatar-upload').click()">
+                        <img id="account-sheet-avatar" src="https://ui-avatars.com/api/?name=User&background=random" style="width: 100%; height: 100%; object-fit: cover;">
+                        <input type="file" id="mobile-avatar-upload" accept="image/*" class="hidden" onchange="window.handleAvatarUpload(event)">
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <h3 id="account-sheet-name" style="font-size: 1.05rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Usuário</h3>
+                        <p id="account-sheet-email" style="font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">usuario@email.com</p>
+                    </div>
+                </div>
+
+                <!-- Formulário de Dados da Loja -->
+                <div class="glass-card">
+                    <h4 style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px;">Identidade da Loja</h4>
+                    <div class="form-group-mobile">
+                        <label>Nome Fantasia no Recibo</label>
+                        <input type="text" id="setting-store-name" class="input-mobile" placeholder="JÚ MAGAZINE" onchange="window.saveMobileStoreSetting('sys_store_name', this.value)">
+                    </div>
+                    <div class="form-group-mobile">
+                        <label>CNPJ ou CPF</label>
+                        <input type="text" id="setting-store-doc" class="input-mobile" placeholder="00.000.000/0001-00" onchange="window.saveMobileStoreSetting('sys_store_doc', this.value)">
+                    </div>
+                    <div class="form-group-mobile" style="margin-bottom: 0;">
+                        <label>Endereço e Cidade</label>
+                        <input type="text" id="setting-store-address" class="input-mobile" placeholder="Rua das Flores, 123 - Centro" onchange="window.saveMobileStoreSetting('sys_store_address', this.value)">
+                    </div>
+                </div>
+
+                <!-- Taxas das Maquininhas -->
+                <div class="glass-card">
+                    <h4 style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px;">Taxas de Cartão (%)</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group-mobile">
+                            <label>Taxa Débito (%)</label>
+                            <input type="number" step="0.01" id="setting-tax-debit" class="input-mobile" placeholder="1.99" onchange="window.saveMobileStoreSetting('sys_tax_debit', this.value)">
+                        </div>
+                        <div class="form-group-mobile">
+                            <label>Taxa Crédito (%)</label>
+                            <input type="number" step="0.01" id="setting-tax-credit" class="input-mobile" placeholder="3.49" onchange="window.saveMobileStoreSetting('sys_tax_credit', this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações do Sistema -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+                    <button type="button" class="btn-glass" onclick="window.startMobileOnboardingTour()"><i data-lucide="compass"></i> Ver Tutorial do Sistema</button>
+                    <button type="button" class="btn-glass" onclick="window.exportMobileCSVBackup()"><i data-lucide="download"></i> Fazer Backup do Estoque (CSV)</button>
+                    <a href="../pages/app.html" onclick="window.setDevicePreference('desktop');" class="btn-glass" style="text-decoration: none;"><i data-lucide="monitor"></i> Abrir Modo Computador / Desktop</a>
+                </div>
+
+                <!-- Botão de Sair com Confirmação -->
+                <button type="button" class="btn-glass btn-glass-destructive" onclick="window.openLogoutModal()">
+                    <i data-lucide="log-out"></i> Encerrar Sessão (Sair)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHEET: DETALHES DE UMA VENDA NO HISTÓRICO -->
+    <div id="sale-detail-sheet" class="mobile-sheet-overlay hidden" onclick="window.closeSaleDetailSheetOnOverlay(event)">
+        <div class="mobile-sheet" onclick="event.stopPropagation()">
+            <div class="sheet-handle-bar"><div class="sheet-handle"></div></div>
+            <div class="sheet-header">
+                <h2 class="sheet-title"><i data-lucide="file-text"></i> Detalhes da Venda</h2>
+                <button type="button" class="sheet-close-btn" onclick="window.closeSaleDetailSheet()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="sheet-body" id="sale-detail-body">
+                <!-- Conteúdo preenchido dinamicamente -->
+            </div>
+            <div class="sheet-footer">
+                <button type="button" class="btn-glass btn-glass-destructive" style="width: auto;" onclick="window.promptCancelSale()" title="Estornar Venda">
+                    <i data-lucide="rotate-ccw"></i> Estornar
+                </button>
+                <button type="button" class="btn-glass btn-glass-primary" onclick="window.reprintCurrentSaleReceipt()">
+                    <i data-lucide="printer"></i> Recibo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMAÇÃO DE LOGOUT -->
+    <div id="logout-confirm-modal" class="mobile-sheet-overlay hidden" style="z-index: 1005;">
+        <div class="mobile-sheet" style="border-radius: var(--radius-xl); margin: auto 16px; border-bottom: 1px solid var(--glass-card-border);">
+            <div style="padding: 24px 20px; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i data-lucide="log-out" style="width: 26px; height: 26px;"></i>
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Sair da Conta?</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.5rem;">
+                    Tem certeza de que deseja encerrar sua sessão? Você precisará fazer login novamente para acessar o sistema.
+                </p>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-glass" style="flex: 1;" onclick="window.closeLogoutModal()">Cancelar</button>
+                    <button type="button" id="btn-confirm-logout" class="btn-glass btn-glass-destructive" style="flex: 1;" onclick="window.logoutMobile()">Sim, Sair</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AUTORIZAÇÃO ADMIN (ESTORNO / EXCLUSÃO) -->
+    <div id="admin-auth-modal" class="mobile-sheet-overlay hidden" style="z-index: 1010;">
+        <div class="mobile-sheet" style="border-radius: var(--radius-xl); margin: auto 16px; border-bottom: 1px solid var(--glass-card-border);">
+            <div style="padding: 24px 20px; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i data-lucide="shield-alert" style="width: 26px; height: 26px;"></i>
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Senha de Administrador</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">
+                    Esta operação exige autorização de segurança.
+                </p>
+                <input type="password" id="admin-auth-pwd" class="input-mobile" placeholder="Senha admin (padrão: admin)" style="text-align: center; margin-bottom: 1rem;">
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-glass" style="flex: 1;" onclick="window.closeAdminAuthModal()">Cancelar</button>
+                    <button type="button" class="btn-glass btn-glass-primary" style="flex: 1;" onclick="window.verifyAdminAuth()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ONBOARDING TOUR MOBILE -->
+    <div id="mobile-tour-modal" class="mobile-tour-overlay hidden">
+        <div class="mobile-tour-card">
+            <div class="tour-progress-wrapper" style="margin-bottom: 14px;">
+                <div id="mobile-tour-progress" class="tour-progress-bar" style="width: 20%;"></div>
+            </div>
+            <div class="tour-badge-row">
+                <span id="mobile-tour-badge" class="tour-badge">
+                    <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                    <span id="mobile-tour-badge-text">Passo 1 de 5 • Início</span>
+                </span>
+                <span id="mobile-tour-counter" class="tour-step-counter">1 de 5</span>
+            </div>
+
+            <h3 id="mobile-tour-title" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Bem-vindo ao Axis! 🚀</h3>
+            <p id="mobile-tour-desc" style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1rem;">Aqui você acompanha o faturamento...</p>
+
+            <div class="tour-example-box" style="margin-bottom: 1rem;">
+                <div class="tour-example-header">
+                    <i data-lucide="lightbulb" style="width: 14px; height: 14px;"></i>
+                    <span>Exemplo de uso prático</span>
+                </div>
+                <p id="mobile-tour-example" class="tour-example-text">No final do expediente...</p>
+            </div>
+
+            <div class="tour-footer">
+                <button type="button" class="tour-btn-skip" onclick="window.promptSkipMobileTour()">Pular tutorial</button>
+                <div class="tour-nav-buttons">
+                    <button type="button" id="mobile-tour-btn-prev" class="btn-glass btn-glass-sm hidden" style="width: auto;" onclick="window.prevMobileTourStep()">Voltar</button>
+                    <button type="button" id="mobile-tour-btn-next" class="btn-glass btn-glass-primary btn-glass-sm" style="width: auto;" onclick="window.nextMobileTourStep()">Próximo ➔</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMAÇÃO DE PULAR O TUTORIAL -->
+    <div id="mobile-tour-skip-confirm" class="mobile-sheet-overlay hidden" style="z-index: 1010;">
+        <div class="mobile-sheet" style="border-radius: var(--radius-xl); margin: auto 16px; border-bottom: 1px solid var(--glass-card-border);">
+            <div style="padding: 24px 20px; text-align: center;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i data-lucide="alert-triangle" style="width: 26px; height: 26px;"></i>
+                </div>
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Deseja realmente pular?</h3>
+                <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem; text-align: left; font-size: 0.82rem; color: var(--text-primary); line-height: 1.5;">
+                    <strong style="color: #f59e0b; display: block; margin-bottom: 0.25rem;">⚠️ Atenção importante:</strong>
+                    Ao pular agora, você <strong>não verá mais este tutorial de apresentação</strong>, pois ele é exibido automaticamente apenas uma vez no primeiro login da conta.
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-glass" style="flex: 1;" onclick="window.cancelSkipMobileTour()">Continuar Tour</button>
+                    <button type="button" class="btn-glass btn-glass-destructive" style="flex: 1;" onclick="window.finishMobileOnboarding(true)">Sim, Pular</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LEITOR DE CÓDIGO DE BARRAS (CÂMERA) -->
+    <div id="scanner-modal" class="mobile-sheet-overlay hidden" style="z-index: 1020;">
+        <div class="mobile-sheet" style="border-radius: var(--radius-xl); margin: auto 16px; max-width: 420px; overflow: hidden; border: 1px solid var(--glass-card-border-glow);">
+            <div style="padding: 16px; text-align: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="scan-barcode"></i> Leitor de Código
+                    </h3>
+                    <button type="button" class="sheet-close-btn" onclick="window.closeScannerModal()"><i data-lucide="x"></i></button>
+                </div>
+                
+                <div class="scanner-camera-box" style="position: relative; width: 100%; height: 260px; background: #000; border-radius: var(--radius-lg); overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-card-border-glow);">
+                    <video id="scanner-video" playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <div class="scanner-laser"></div>
+                    <div class="scanner-target-reticle"></div>
+                    <div id="scanner-fallback-msg" class="hidden" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.85); color: var(--text-secondary); font-size: 0.85rem;">
+                        <i data-lucide="camera-off" style="width: 32px; height: 32px; margin-bottom: 8px; color: var(--text-tertiary);"></i>
+                        <p>Câmera indisponível ou permissão não concedida.</p>
+                    </div>
+                </div>
+
+                <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 12px 0 8px 0;">
+                    Aponte para o código ou digite o número abaixo:
+                </p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="scanner-manual-input" class="input-mobile" placeholder="Digitar código de barras...">
+                    <button type="button" class="btn-glass btn-glass-primary" style="width: auto; padding: 0 16px;" onclick="window.submitManualBarcode()">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

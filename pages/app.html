@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Axis</title>
+    <!-- Roteamento inteligente de dispositivo (Mobile vs Desktop) -->
+    <script src="../assets/scripts/device-router.js"></script>
+    <script>
+        window.routeDevice('desktop-app');
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z'/><path d='M5 3v4'/><path d='M19 17v4'/><path d='M3 5h4'/><path d='M17 19h4'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +21,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <link rel="stylesheet" href="../assets/styles/style.css?v=7">
-    <script type="module" src="../assets/scripts/app.js?v=7"></script>
+    <script type="module" src="../assets/scripts/app.js?v=10"></script>
     <style>
         body { opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
         body.auth-ready { opacity: 1; pointer-events: all; }
@@ -68,8 +73,14 @@
                     <button class="popover-btn" onclick="window.openNotificationsModal(); document.getElementById('account-popover').classList.remove('popover-active');">
                         <i data-lucide="bell"></i> Notificações
                     </button>
+                    <button class="popover-btn" onclick="window.startOnboardingTour(); document.getElementById('account-popover').classList.remove('popover-active');">
+                        <i data-lucide="compass"></i> Tutorial do Sistema
+                    </button>
+                    <a href="../mobile/index.html" class="popover-btn" onclick="window.setDevicePreference('mobile');" style="text-decoration: none; color: inherit;">
+                        <i data-lucide="smartphone"></i> Versão Mobile (Liquid Glass)
+                    </a>
                     <div class="popover-divider"></div>
-                    <button class="popover-btn text-red" onclick="window.logout()">
+                    <button class="popover-btn text-red" onclick="window.openLogoutModal()">
                         <i data-lucide="log-out"></i> Sair
                     </button>
                 </div>
@@ -987,6 +998,105 @@
             </div>
         </div>
     </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE LOGOUT -->
+    <div id="logout-confirm-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px; padding: 2.5rem 2rem; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: var(--destructive); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <i data-lucide="log-out" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Encerrar Sessão</h2>
+            <p class="desc" style="margin-bottom: 1.75rem;">Tem certeza de que deseja sair da sua conta? Você precisará informar seu e-mail e senha para entrar novamente.</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button type="button" class="btn-secondary" style="flex: 1;" onclick="window.closeLogoutModal()">Cancelar</button>
+                <button type="button" id="btn-confirm-logout" class="btn" style="flex: 1; background: var(--destructive); color: white;" onclick="window.logout()">Sim, Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DO TUTORIAL DE BOAS-VINDAS -->
+    <div id="tour-modal" class="tour-overlay hidden">
+        <div class="tour-card card">
+            <div class="tour-progress-wrapper">
+                <div id="tour-progress-bar" class="tour-progress-bar" style="width: 20%;"></div>
+            </div>
+            <div class="tour-content">
+                <div class="tour-badge-row">
+                    <span id="tour-badge" class="tour-badge">
+                        <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+                        <span id="tour-badge-text">Passo 1 de 5 • Início</span>
+                    </span>
+                    <span id="tour-step-counter" class="tour-step-counter">1 de 5</span>
+                </div>
+
+                <h2 id="tour-title" class="tour-title">Bem-vindo ao Axis PDV! 🚀</h2>
+                <p id="tour-description" class="tour-description">Este é o seu painel de controle principal...</p>
+
+                <div class="tour-example-box">
+                    <div class="tour-example-header">
+                        <i data-lucide="lightbulb" style="width: 15px; height: 15px;"></i>
+                        <span>Exemplo de uso prático</span>
+                    </div>
+                    <p id="tour-example-text" class="tour-example-text">No final do expediente...</p>
+                </div>
+
+                <ul id="tour-highlights" class="tour-highlights">
+                    <!-- Highlights gerados via JS -->
+                </ul>
+
+                <div class="tour-footer">
+                    <button type="button" class="tour-btn-skip" onclick="window.promptSkipOnboarding()">Pular tutorial</button>
+                    <div class="tour-nav-buttons">
+                        <button type="button" id="tour-btn-prev" class="btn-secondary hidden" onclick="window.prevTourStep()">Voltar</button>
+                        <button type="button" id="tour-btn-next" class="btn" onclick="window.nextTourStep()">Próximo ➔</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO PARA PULAR TUTORIAL -->
+    <div id="tour-skip-confirm-modal" class="modal-overlay hidden" style="z-index: 1005;">
+        <div class="modal-content card" style="max-width: 440px; padding: 2.25rem 2rem; text-align: center;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); color: #f59e0b; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+                <i data-lucide="alert-triangle" style="width: 28px; height: 28px;"></i>
+            </div>
+            <h2 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Deseja realmente pular?</h2>
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 0.9rem; margin-bottom: 1.5rem; text-align: left; font-size: 0.85rem; color: var(--foreground); line-height: 1.5;">
+                <strong style="color: #f59e0b; display: block; margin-bottom: 0.25rem;">⚠️ Atenção importante:</strong>
+                Ao pular agora, você <strong>não verá mais este tutorial de apresentação</strong>, pois ele é exibido automaticamente apenas uma única vez no primeiro acesso da sua conta.
+            </div>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button type="button" class="btn-secondary" style="flex: 1;" onclick="window.cancelSkipTour()">Continuar Tutorial</button>
+                <button type="button" class="btn" style="flex: 1; background: var(--destructive); color: white;" onclick="window.finishOnboardingTour(true)">Sim, Pular</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE SUGGESTION BANNER -->
+    <div id="mobile-suggest-banner" style="display: none; position: fixed; bottom: 16px; left: 16px; right: 16px; background: rgba(18, 18, 22, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 16px; padding: 12px 16px; z-index: 9999; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); align-items: center; justify-content: space-between; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; color: #fff;">
+                <i data-lucide="smartphone" style="width: 20px; height: 20px;"></i>
+            </div>
+            <div>
+                <strong style="font-size: 0.88rem; color: #fff; display: block;">Versão Mobile Disponível</strong>
+                <span style="font-size: 0.75rem; color: #a1a1aa;">Interface nativa Apple Liquid Glass</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <a href="../mobile/index.html" style="background: #ffffff; color: #000000; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-decoration: none;">Abrir</a>
+            <button type="button" onclick="document.getElementById('mobile-suggest-banner').style.display = 'none'; sessionStorage.setItem('dismiss_mobile_prompt', '1');" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; padding: 4px;">
+                <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+            </button>
+        </div>
+    </div>
+    <script>
+        if ((window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) && !sessionStorage.getItem('dismiss_mobile_prompt')) {
+            const b = document.getElementById('mobile-suggest-banner');
+            if (b) b.style.display = 'flex';
+        }
+    </script>
 
 </body>
 </html>
